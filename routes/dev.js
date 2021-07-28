@@ -164,14 +164,15 @@ router.get('/gen-fake-data', async function (req, res, next) {
 
 
   //CleanWalk
-  let requeteUser = await userModel.find();
   let randAdmin;
   let AdminOut;
   let randParArr;
   let randPar;
-
+  let requeteUser
+  
   for (let i = 0; i < cleanwalks.length; i++) {
-
+    
+    requeteUser = await userModel.find();
     randAdmin = requeteUser[rand(0, requeteUser.length - 1)]["_id"]
     AdminOut = requeteUser.splice(requeteUser.findIndex(e => e["_id"] === randAdmin), 1)
     console.log (AdminOut)
