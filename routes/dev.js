@@ -168,8 +168,8 @@ router.get('/gen-fake-data', async function (req, res, next) {
   let AdminOut;
   let randParArr;
   let randPar;
-  let requeteUser
-  let cityID
+  let requeteUser;
+  let cityId;
   
   for (let i = 0; i < cleanwalks.length; i++) {
     
@@ -195,15 +195,13 @@ router.get('/gen-fake-data', async function (req, res, next) {
     },
 
     randParArr = randPar()
-    cityID = await cityModel.find({ cityName: cleanwalks[i].cleanwalkCity })["_id"]
-    console.log(cityModel.find())
-    console.log(cleanwalks[i].cleanwalkCity )
-    console.log(cityID)
+    cityId = await cityModel.findOne({ cityName: cleanwalks[i].cleanwalkCity });
+    console.log({cityId});
 
     var newCleanwalk = new cleanwalkModel({
       cleanwalkTitle: cleanwalks[i].cleanwalkTitle,
       cleanwalkDescription: cleanwalks[i].cleanwalkDescription,
-      cleanwalkCity: cityID,
+      cleanwalkCity: cityId["_id"],
       cleanwalkCoordinates: cleanwalks[i].cleanwalkCoordinates,
       startingDate: cleanwalks[i].startingDate,
       endingDate: cleanwalks[i].endingDate,
