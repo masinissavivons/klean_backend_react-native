@@ -9,6 +9,7 @@ const citySchema = mongoose.Schema({
   cityName: String,
   cityCoordinates: cityCoordinatesSchema,
   population: Number,
+  cityCode: String,
 });
 
 
