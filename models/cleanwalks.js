@@ -26,5 +26,5 @@ const cleanwalkSchema = mongoose.Schema({
 
 
 
-const cleanwalkModel = mongoose.model("cleanwalk", cleanwalkSchema);
+const cleanwalkModel = mongoose.model("cleanwalks", cleanwalkSchema);
 module.exports = cleanwalkModel;
