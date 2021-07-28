@@ -28,8 +28,6 @@ router.post("/sign-up", async function (req, res, next) {
     error.push("Vous vous êtes déjà enregistré. Vous pouvez vous connecter.");
   }
 
-
-
   if (error.length == 0) {
     let hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
     let newUser = new userModel({
@@ -55,31 +53,33 @@ router.post("/sign-up", async function (req, res, next) {
 router.post("/sign-in", async function (req, res, next) {
   let error = [];
   let result = false;
-  let user = null;
+  let user = "";
   let token = null;
 
-  if (req.boody.emailFromFront == "" || req.body.passwordFromFront == "") {
-    error.push("Veuillez remplir les deux champs");
+  if (req.body.emailFromFront == "" || req.body.passwordFromFront == "") {
+    error.push("Veuillez remplir les deux champs.");
   }
 
-  if (error.length) {
-    let user = await userModel.findOne({
+  if (error.length == 0) {
+    user = await userModel.findOne({
       email: req.body.emailFromFront,
     });
-  }
 
-  let password = req.body.passwordFromFront;
-
-  if (user) {
-    if (bcrypt.compareSync(password, user.password)){ 
-      result = true
-        token = user.token
+    if (user) {
+      console.log("user", user);
+      if (bcrypt.compareSync(req.body.passwordFromFront, user.password)) {
+        result = true;
+        token = user.token;
       } else {
-      error.push("Mot de passe incorrect")
+        result = false;
+        error.push("Mot de passe incorrect.");
+      }
+    } else {
+      error.push("Email incorrect.");
     }
   }
 
-  res.json({result});
+  res.json({ error, result, user, token });
 });
 
 module.exports = router;
