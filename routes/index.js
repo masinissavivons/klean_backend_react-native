@@ -10,8 +10,6 @@ router.get('/', function(req, res, next) {
 /*Autocomplete-search*/
 router.post('/autocomplete-search', function(req, res, next) {
   
-  console.log(req.body.adress);
-
   let requete = request("GET", `https://api-adresse.data.gouv.fr/search/?q=${req.body.adress}`);
   let response = JSON.parse(requete.body);
 
