@@ -19,14 +19,13 @@ router.post('/autocomplete-search', function(req, res, next) {
 });
 
 // load-cleanwalk
-router.get('/load-cleanwalk', async function(req, res, next) {
+router.get('/load-cleanwalk/:idCW', async function(req, res, next) {
 
-  var cleanwalk = await cleanwalkModel.findById("61017ac720f07d486871be0b").populate('cleanwalkCity').exec();
+  var cleanwalk = await cleanwalkModel.findById(req.params.idCW).populate('cleanwalkCity').populate('participantsList').populate('admin').exec();
 
   console.log(cleanwalk);
-  console.log("city", cleanwalk.cleanwalkCity.cityName);
 
-  res.json({cleanwalk});
+  res.json({result: true, cleanwalk});
 }); 
 
 module.exports = router;
