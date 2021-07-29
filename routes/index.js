@@ -33,6 +33,8 @@ router.get('/load-cleanwalk/:idCW', async function(req, res, next) {
 router.post('/load-pin-on-change-region', async function(req, res, next) {
 
   const coordinateJsonParse = JSON.parse(req.body.coordinate);
+  const dateSearch = req.body.date;
+  console.log('dateSearch', dateSearch);
 
   //on définit la fonction pour calculer les intervals nécessaires à la requête
   const definePerimeter = (regionLat, regionLong, latD, longD) => {
@@ -49,7 +51,9 @@ router.post('/load-pin-on-change-region', async function(req, res, next) {
   //on fait la requete dans MongoDB
   let cleanWalkRequest = await cleanwalkModel.find()
   .where('cleanwalkCoordinates.latitude').gte(customInterval.lat.min).lte(customInterval.lat.max)
-  .where('cleanwalkCoordinates.longitude').gte(customInterval.long.min).lte(customInterval.long.max);
+  .where('cleanwalkCoordinates.longitude').gte(customInterval.long.min).lte(customInterval.long.max)
+  .where('startingDate').gte(dateSearch)
+  .populate('admin').exec();
 
   res.json({result: true, cleanWalkArray: cleanWalkRequest});
 });
