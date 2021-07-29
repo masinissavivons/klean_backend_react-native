@@ -104,6 +104,11 @@ router.post("/sign-up", async function (req, res, next) {
       });
     }
   }
+
+  res.json({
+    error,
+    result,
+  });
 });
 
 //    POST Sign-in    //
@@ -113,10 +118,14 @@ router.post("/sign-in", async function (req, res, next) {
   let user = "";
   let token = null;
 
+  let idCleanwalk = req.body.cleanwalkIdFromFront;
+  let newParticipant = null;
+
   if (req.body.emailFromFront == "" || req.body.passwordFromFront == "") {
     error.push("Veuillez remplir les deux champs.");
   }
 
+  // sign-in
   if (error.length == 0) {
     user = await userModel.findOne({
       email: req.body.emailFromFront,
@@ -133,9 +142,43 @@ router.post("/sign-in", async function (req, res, next) {
     } else {
       error.push("Email incorrect.");
     }
+
+    res.json({ error, result, user, token });
   }
 
-  res.json({ error, result, user, token });
+  // sign-in & participate
+  if (error.length == 0 && idCleanwalk !== undefined) {
+    user = await userModel.findOne({
+      email: req.body.emailFromFront,
+    });
+
+    console.log("user: ", user)
+    if (user) {
+      if (bcrypt.compareSync(req.body.passwordFromFront, user.password)) {
+        result = true;
+        token = user.token;
+
+        let cleanwalk = await cleanwalkModel.findOne({ _id: idCleanwalk });
+
+        newParticipant = await cleanwalkModel.updateOne(
+          { _id: idCleanwalk },
+          { $push: { participantsList: user._id } }
+        );
+      } else {
+        result = false;
+        error.push("Mot de passe incorrect.");
+      } 
+    } else {
+      error.push("Email incorrect.");
+    }
+
+    res.json({ error, result, user, token, newParticipant });
+  }
+
+  res.json({
+    error,
+    result,
+  });
 });
 
 module.exports = router;
