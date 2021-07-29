@@ -5,7 +5,7 @@ const userSchema = mongoose.Schema({
   lastName: String,
   email: String,
   password: String,
-  city: String,
+  city: { type: mongoose.Schema.Types.ObjectId, ref: "cities" },
   avatarUrl: String,
 });
 
