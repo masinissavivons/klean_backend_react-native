@@ -19,7 +19,7 @@ router.post("/sign-up", async function (req, res, next) {
   let saveUser = null;
   let token = null;
   let idCleanwalk = req.body.cleanwalkIdFromFront;
-  let newParticipantSaved = null;
+  let newParticipant = null;
 
   let data = await userModel.findOne({
     email: req.body.emailFromFront,
@@ -61,6 +61,13 @@ router.post("/sign-up", async function (req, res, next) {
       result = true;
       token = saveUser.token;
     }
+
+    res.json({
+      error,
+      result,
+      saveUser,
+      token,
+    });
   }
 
   // register & participate
@@ -80,23 +87,23 @@ router.post("/sign-up", async function (req, res, next) {
     if (saveUser) {
       let cleanwalk = await cleanwalkModel.findOne({ _id: idCleanwalk });
 
-      let newParticipant = await cleanwalkModel.updateOne(
+      newParticipant = await cleanwalkModel.updateOne(
         { _id: idCleanwalk },
         { $push: { participantsList: saveUser._id } }
       );
 
       result = true;
       token = saveUser.token;
+
+      res.json({
+        error,
+        result,
+        saveUser,
+        token,
+        newParticipant,
+      });
     }
   }
-
-  res.json({
-    error,
-    result,
-    saveUser,
-    token,
-    newParticipantSaved,
-  });
 });
 
 //    POST Sign-in    //
