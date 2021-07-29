@@ -18,6 +18,23 @@ router.post('/autocomplete-search', function(req, res, next) {
   res.json({result: true, response: response.features});
 });
 
+/*Autocomplete-search-city-only*/
+router.post('/autocomplete-search-city-only', function(req, res, next) {
+  
+  let cityRegex = /arrondissement/i
+
+  let requete = request("GET", `https://api-adresse.data.gouv.fr/search/?q=${req.body.city}&type=municipality`);
+  let response = JSON.parse(requete.body);
+  let newResponse = response.features.filter(obj => !cityRegex.test(obj.properties.label) )
+console.log("newResponse", newResponse);
+  newResponse = newResponse.map(obj => {
+    let copy = {...obj}
+    copy.properties.label = copy.properties.city
+    return copy});
+
+  res.json({result: true, newResponse});
+});
+
 // load-cleanwalk
 router.get('/load-cleanwalk/:idCW', async function(req, res, next) {
 
