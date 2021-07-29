@@ -11,12 +11,13 @@ function validateEmail(email) {
   return re.test(email);
 }
 
-/* GET users listing. */
+//    POST Sign-up    //
 router.post("/sign-up", async function (req, res, next) {
   let error = [];
   let result = false;
   let saveUser = null;
   let token = null;
+  let participate = req.body.cleanwalkIdFromFront;
 
   let data = await userModel.findOne({
     email: req.body.emailFromFront,
@@ -40,7 +41,31 @@ router.post("/sign-up", async function (req, res, next) {
     error.push("Format d'email incorrect");
   }
 
-  if (error.length == 0) {
+  // register
+  if (error.length == 0 && req.body.cleanwalkIdFromFront === undefined) {
+    let hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
+    let newUser = new userModel({
+      firstName: req.body.firstNameFromFront,
+      lastName: req.body.lastNameFromFront,
+      email: req.body.emailFromFront,
+      city: req.body.cityFromFront,
+      password: hash,
+      token: uid2(32),
+    });
+
+    saveUser = await newUser.save();
+
+    if (saveUser) {
+      result = true;
+      token = saveUser.token;
+    }
+    console.log("saveUser", saveUser);
+  }
+
+  // register & participate
+  if (error.length == 0 && req.body.cleanwalkIdFromFront !== undefined) {
+    console.log("participate", participate);
+
     let hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
     let newUser = new userModel({
       firstName: req.body.firstNameFromFront,
@@ -62,6 +87,7 @@ router.post("/sign-up", async function (req, res, next) {
   res.json({ error, result, saveUser, token });
 });
 
+//    POST Sign-in    //
 router.post("/sign-in", async function (req, res, next) {
   let error = [];
   let result = false;
