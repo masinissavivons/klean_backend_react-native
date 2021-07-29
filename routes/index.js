@@ -34,8 +34,6 @@ router.post('/load-pin-on-change-region', async function(req, res, next) {
 
   const coordinateJsonParse = JSON.parse(req.body.coordinate);
 
-  //console.log('req.body:', coordinateJsonParse);
-  
   //on définit la fonction pour calculer les intervals nécessaires à la requête
   const definePerimeter = (regionLat, regionLong, latD, longD) => {
     let interval = {
@@ -45,19 +43,13 @@ router.post('/load-pin-on-change-region', async function(req, res, next) {
     return interval;
   };
 
-
   //on reçoit via le body les éléments de la région qu'on place en arguments de la fonction
   let customInterval = definePerimeter(coordinateJsonParse.latitude, coordinateJsonParse.longitude, coordinateJsonParse.latitudeDelta, coordinateJsonParse.longitudeDelta);
-
-  //console.log(customInterval);
 
   //on fait la requete dans MongoDB
   let cleanWalkRequest = await cleanwalkModel.find()
   .where('cleanwalkCoordinates.latitude').gte(customInterval.lat.min).lte(customInterval.lat.max)
   .where('cleanwalkCoordinates.longitude').gte(customInterval.long.min).lte(customInterval.long.max);
-
-
-  //console.log(cleanWalkRequest);
 
   res.json({result: true, cleanWalkArray: cleanWalkRequest});
 });
