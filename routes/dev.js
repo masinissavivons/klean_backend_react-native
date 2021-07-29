@@ -134,6 +134,7 @@ router.get('/gen-fake-data', async function (req, res, next) {
       cityName: cities[i].cityName,
       cityCoordinates: { longitude: cities[i].cityCoordinates.longitude, latitude: cities[i].cityCoordinates.latitude },
       population: cities[i].population,
+      cityCode: cities[i].cityCode,
     });
 
     var citySaved = await newCity.save();
