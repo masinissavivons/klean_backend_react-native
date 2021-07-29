@@ -5,6 +5,12 @@ let userModel = require("../models/users");
 var bcrypt = require("bcrypt");
 const uid2 = require("uid2");
 
+function validateEmail(email) {
+  const re =
+    /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(email);
+}
+
 /* GET users listing. */
 router.post("/sign-up", async function (req, res, next) {
   let error = [];
@@ -16,16 +22,22 @@ router.post("/sign-up", async function (req, res, next) {
     email: req.body.emailFromFront,
   });
 
+  if (data != null) {
+    error.push("Vous vous êtes déjà enregistré. Vous pouvez vous connecter.");
+  }
+
   if (
-    req.body.usernameFromFront == "" ||
+    req.body.firsNameFromFront == "" ||
+    req.body.lastNameFromFront == "" ||
     req.body.emailFromFront == "" ||
+    req.body.cityFromFront == "" ||
     req.body.passwordFromFront == ""
   ) {
     error.push("Veuillez remplir tous les champs.");
   }
 
-  if (data != null) {
-    error.push("Vous vous êtes déjà enregistré. Vous pouvez vous connecter.");
+  if (!validateEmail(req.body.emailFromFront)) {
+    error.push("Format d'email incorrect");
   }
 
   if (error.length == 0) {
@@ -66,7 +78,6 @@ router.post("/sign-in", async function (req, res, next) {
     });
 
     if (user) {
-      console.log("user", user);
       if (bcrypt.compareSync(req.body.passwordFromFront, user.password)) {
         result = true;
         token = user.token;
