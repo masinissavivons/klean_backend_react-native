@@ -23,7 +23,8 @@ router.get('/load-cleanwalk/:idCW', async function(req, res, next) {
 
   var cleanwalk = await cleanwalkModel.findById(req.params.idCW).populate('cleanwalkCity').populate('participantsList').populate('admin').exec();
 
-  console.log(cleanwalk);
+  console.log("1: ", cleanwalk);
+  console.log("city", cleanwalk.cleanwalkCity.cityName);
 
   res.json({result: true, cleanwalk});
 }); 

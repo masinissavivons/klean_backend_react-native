@@ -4,6 +4,7 @@ var router = express.Router();
 let userModel = require("../models/users");
 var bcrypt = require("bcrypt");
 const uid2 = require("uid2");
+const cleanwalkModel = require("../models/cleanwalks");
 
 function validateEmail(email) {
   const re =
@@ -11,12 +12,14 @@ function validateEmail(email) {
   return re.test(email);
 }
 
-/* GET users listing. */
+//    POST Sign-up    //
 router.post("/sign-up", async function (req, res, next) {
   let error = [];
   let result = false;
   let saveUser = null;
   let token = null;
+  let idCleanwalk = req.body.cleanwalkIdFromFront;
+  let newParticipantSaved = null;
 
   let data = await userModel.findOne({
     email: req.body.emailFromFront,
@@ -40,7 +43,8 @@ router.post("/sign-up", async function (req, res, next) {
     error.push("Format d'email incorrect");
   }
 
-  if (error.length == 0) {
+  // register
+  if (error.length == 0 && idCleanwalk === undefined) {
     let hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
     let newUser = new userModel({
       firstName: req.body.firstNameFromFront,
@@ -59,9 +63,43 @@ router.post("/sign-up", async function (req, res, next) {
     }
   }
 
-  res.json({ error, result, saveUser, token });
+  // register & participate
+  if (error.length == 0 && idCleanwalk !== undefined) {
+    let hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
+    let newUser = new userModel({
+      firstName: req.body.firstNameFromFront,
+      lastName: req.body.lastNameFromFront,
+      email: req.body.emailFromFront,
+      city: req.body.cityFromFront,
+      password: hash,
+      token: uid2(32),
+    });
+
+    let saveUser = await newUser.save();
+
+    if (saveUser) {
+      let cleanwalk = await cleanwalkModel.findOne({ _id: idCleanwalk });
+
+      let newParticipant = await cleanwalkModel.updateOne(
+        { _id: idCleanwalk },
+        { $push: { participantsList: saveUser._id } }
+      );
+
+      result = true;
+      token = saveUser.token;
+    }
+  }
+
+  res.json({
+    error,
+    result,
+    saveUser,
+    token,
+    newParticipantSaved,
+  });
 });
 
+//    POST Sign-in    //
 router.post("/sign-in", async function (req, res, next) {
   let error = [];
   let result = false;
