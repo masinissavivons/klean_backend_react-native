@@ -23,9 +23,6 @@ router.get('/load-cleanwalk/:idCW', async function(req, res, next) {
 
   var cleanwalk = await cleanwalkModel.findById(req.params.idCW).populate('cleanwalkCity').populate('participantsList').populate('admin').exec();
 
-  console.log("1: ", cleanwalk);
-  console.log("city", cleanwalk.cleanwalkCity.cityName);
-
   res.json({result: true, cleanwalk});
 }); 
 
@@ -34,7 +31,6 @@ router.post('/load-pin-on-change-region', async function(req, res, next) {
 
   const coordinateJsonParse = JSON.parse(req.body.coordinate);
   const dateSearch = req.body.date;
-  console.log('dateSearch', dateSearch);
 
   //on définit la fonction pour calculer les intervals nécessaires à la requête
   const definePerimeter = (regionLat, regionLong, latD, longD) => {
