@@ -4,6 +4,7 @@ var router = express.Router();
 let userModel = require("../models/users");
 var bcrypt = require("bcrypt");
 const uid2 = require("uid2");
+const cleanwalkModel = require("../models/cleanwalks");
 
 function validateEmail(email) {
   const re =
@@ -14,10 +15,12 @@ function validateEmail(email) {
 //    POST Sign-up    //
 router.post("/sign-up", async function (req, res, next) {
   let error = [];
+  let errorNetwork = [];
   let result = false;
   let saveUser = null;
   let token = null;
-  let participate = req.body.cleanwalkIdFromFront;
+  let idCleanwalk = req.body.cleanwalkIdFromFront;
+  let newParticipantSaved = null;
 
   let data = await userModel.findOne({
     email: req.body.emailFromFront,
@@ -42,7 +45,7 @@ router.post("/sign-up", async function (req, res, next) {
   }
 
   // register
-  if (error.length == 0 && req.body.cleanwalkIdFromFront === undefined) {
+  if (error.length == 0 && idCleanwalk === undefined) {
     let hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
     let newUser = new userModel({
       firstName: req.body.firstNameFromFront,
@@ -59,13 +62,10 @@ router.post("/sign-up", async function (req, res, next) {
       result = true;
       token = saveUser.token;
     }
-    console.log("saveUser", saveUser);
   }
 
   // register & participate
-  if (error.length == 0 && req.body.cleanwalkIdFromFront !== undefined) {
-    console.log("participate", participate);
-
+  if (error.length == 0 && idCleanwalk !== undefined) {
     let hash = bcrypt.hashSync(req.body.passwordFromFront, 10);
     let newUser = new userModel({
       firstName: req.body.firstNameFromFront,
@@ -76,15 +76,35 @@ router.post("/sign-up", async function (req, res, next) {
       token: uid2(32),
     });
 
-    saveUser = await newUser.save();
+    let saveUser = await newUser.save();
 
     if (saveUser) {
+      let cleanwalk = await cleanwalkModel.findOne({ _id: idCleanwalk });
+
+      let newParticipant = await cleanwalkModel.updateOne(
+        { _id: idCleanwalk },
+        { $push: { participantsList: saveUser._id } }
+      );
+
       result = true;
       token = saveUser.token;
     }
+
+    if (saveUSer == null) {
+      errorNetwork.push(
+        "Problème lors de l'enregistrement, veuillez réessayer."
+      );
+    }
   }
 
-  res.json({ error, result, saveUser, token });
+  res.json({
+    error,
+    errorNetwork,
+    result,
+    saveUser,
+    token,
+    newParticipantSaved,
+  });
 });
 
 //    POST Sign-in    //
