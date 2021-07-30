@@ -113,7 +113,7 @@ router.post("/sign-up", async function (req, res, next) {
   }
 
   // register & participate
-  if (error.length == 0 && idCleanwalk !== undefined) {
+  else if (error.length == 0 && idCleanwalk !== undefined) {
     let found = await cityModel.findOne({ cityCode: code });
 
     if (found) {
@@ -139,21 +139,6 @@ router.post("/sign-up", async function (req, res, next) {
 
         result = true;
         token = saveUser.token;
-
-        res.json({
-          error,
-          result,
-          saveUser,
-          token,
-          newParticipant,
-        });
-        return;
-      } else {
-        res.json({
-          error,
-          result,
-        });
-        return;
       }
     }
 
@@ -174,7 +159,7 @@ router.post("/sign-up", async function (req, res, next) {
         firstName: req.body.firstNameFromFront,
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
-        city: found._id,
+        city: citySaved._id,
         password: hash,
         token: uid2(32),
       });
@@ -191,23 +176,16 @@ router.post("/sign-up", async function (req, res, next) {
 
         result = true;
         token = saveUser.token;
-
-        res.json({
-          error,
-          result,
-          saveUser,
-          token,
-          newParticipant,
-        });
-        return;
-      } else {
-        res.json({
-          error,
-          result,
-        });
-        return;
       }
     }
+    res.json({
+      error,
+      result,
+      saveUser,
+      token,
+      newParticipant,
+    });
+    return;
   }
 });
 
@@ -242,9 +220,6 @@ router.post("/sign-in", async function (req, res, next) {
     } else {
       error.push("Email incorrect.");
     }
-
-    res.json({ error, result, user, token });
-    return;
   }
 
   // sign-in & participate
@@ -274,6 +249,7 @@ router.post("/sign-in", async function (req, res, next) {
 
     res.json({ error, result, user, token, newParticipant });
   }
+
 });
 
 module.exports = router;
