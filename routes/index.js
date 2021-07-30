@@ -87,17 +87,20 @@ router.get('/load-cleanwalk', async function(req, res, next) {
     let userCity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: pointsPerCw } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}},{$match: {"_id": user[0].city}}])
     console.log(userCity);
 
-    cwpercity = cwpercity.map(obj => {
-      let copy = {...obj};
+    cwpercity = cwpercity.map((obj, i) => {
+      let copy = {};
       if (obj["_id"].toString() === userCity[0]["_id"].toString()) {
         copy.isMyCity = true;
       } else {
         copy.isMyCity = false;
       }
+      copy.city = obj["city_info"][0].cityName;
+      copy.points = obj.count;
+      copy.ranking = i+1;
       return (copy)
     })
 
-    res.json({result: true, ranking: cwpercity, myCity: userCity});
+    res.json({result: true, ranking: cwpercity});
   } else {
   res.json({result: false, error: "user not found"});
 }
