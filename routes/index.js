@@ -104,6 +104,14 @@ router.get('/load-cities-ranking', async function(req, res, next) {
   } else {
   res.json({result: false, error: "user not found"});
 }
+});
+
+// load-profil
+router.get('/load-profil/:token', async function(req, res, next) {
+
+  //var cleanwalk = await cleanwalkModel.findById(req.params.idCW).populate('cleanwalkCity').populate('participantsList').populate('admin').exec();
+
+  res.json({result: true});
 }); 
 
 module.exports = router;
