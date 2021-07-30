@@ -71,14 +71,6 @@ router.post("/sign-up", async function (req, res, next) {
         result = true;
         token = saveUser.token;
       }
-
-      res.json({
-        error,
-        result,
-        saveUser,
-        token,
-      })
-      return;
     }
 
     if (found == null) {
@@ -109,20 +101,14 @@ router.post("/sign-up", async function (req, res, next) {
         result = true;
         token = saveUser.token;
       }
-
-      res.json({
-        error,
-        result,
-        saveUser,
-        token,
-      })
-      return;
     }
 
     res.json({
       error,
       result,
-    })
+      saveUser,
+      token,
+    });
     return;
   }
 
@@ -160,13 +146,13 @@ router.post("/sign-up", async function (req, res, next) {
           saveUser,
           token,
           newParticipant,
-        })
+        });
         return;
       } else {
         res.json({
           error,
           result,
-        })
+        });
         return;
       }
     }
@@ -262,7 +248,7 @@ router.post("/sign-in", async function (req, res, next) {
   }
 
   // sign-in & participate
-  if (error.length == 0 && idCleanwalk !== undefined) {
+  else if (error.length == 0 && idCleanwalk !== undefined) {
     user = await userModel.findOne({
       email: req.body.emailFromFront,
     });
@@ -288,11 +274,6 @@ router.post("/sign-in", async function (req, res, next) {
 
     res.json({ error, result, user, token, newParticipant });
   }
-
-  res.json({
-    error,
-    result,
-  });
 });
 
 module.exports = router;
