@@ -84,12 +84,12 @@ router.get('/load-cleanwalk', async function(req, res, next) {
   let user = await userModel.find({token: token});
 
   if(user.length > 0) {
-    let userCity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: pointsPerCw } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}},{$match: {"_id": user[0].city}}])
-    console.log(userCity);
+    /*let userCity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: pointsPerCw } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}},{$match: {"_id": user[0].city}}])
+    console.log(userCity);*/
 
     cwpercity = cwpercity.map((obj, i) => {
       let copy = {};
-      if (obj["_id"].toString() === userCity[0]["_id"].toString()) {
+      if (obj["_id"].toString() === user[0].city.toString()) {
         copy.isMyCity = true;
       } else {
         copy.isMyCity = false;
