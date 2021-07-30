@@ -187,6 +187,10 @@ router.post("/sign-up", async function (req, res, next) {
     });
     return;
   }
+  res.json({
+    error,
+    result,
+  });
 });
 
 //    POST Sign-in    //
@@ -248,8 +252,9 @@ router.post("/sign-in", async function (req, res, next) {
     }
 
     res.json({ error, result, user, token, newParticipant });
+    return;
   }
-
+  res.json({ error, result });
 });
 
 module.exports = router;
