@@ -72,8 +72,8 @@ router.post('/load-pin-on-change-region', async function(req, res, next) {
   res.json({result: true, cleanWalkArray: cleanWalkRequest});
 });
 
-/*load-city-ranking*/
-router.get('/load-cleanwalk', async function(req, res, next) {
+/*load-cities-ranking*/
+router.get('/load-cities-ranking', async function(req, res, next) {
 
   let pointsPerCw = 5;
 
