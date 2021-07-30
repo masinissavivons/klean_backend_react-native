@@ -4,7 +4,8 @@ var newsModel = require('../models/news')
 var userModel = require('../models/users')
 var cleanwalkModel = require('../models/cleanwalks')
 var cityModel = require('../models/cities')
-
+const uid2 = require("uid2");
+var bcrypt = require("bcrypt");
 
 /* 
   /dev/gen-fake-data
@@ -154,10 +155,11 @@ router.get('/gen-fake-data', async function (req, res, next) {
     var newUser = new userModel({
       firstName: randfn,
       lastName: randln,
-      email: randfn + randln + rand(0, 2000) + "@gmail.com",
-      password: rand(0, 15) + rand(0, 15) + rand(0, 15) + rand(0, 15) + rand(0, 15) + rand(0, 15) + rand(0, 15),
+      email: (randfn + randln + rand(0, 2000) + "@gmail.com").toLowerCase(),
+      password: bcrypt.hashSync("cleanwalk", 10),
       city: requeteCity[rand(0, requeteCity.length - 1)]["_id"],
       avatarUrl: "",
+      token: uid2(32),
     });
 
     var userSaved = await newUser.save();

@@ -7,6 +7,7 @@ const userSchema = mongoose.Schema({
   password: String,
   city: { type: mongoose.Schema.Types.ObjectId, ref: "cities" },
   avatarUrl: String,
+  token: String
 });
 
 
