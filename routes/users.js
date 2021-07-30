@@ -71,14 +71,6 @@ router.post("/sign-up", async function (req, res, next) {
         result = true;
         token = saveUser.token;
       }
-
-      res.json({
-        error,
-        result,
-        saveUser,
-        token,
-      })
-      return;
     }
 
     if (found == null) {
@@ -109,25 +101,19 @@ router.post("/sign-up", async function (req, res, next) {
         result = true;
         token = saveUser.token;
       }
-
-      res.json({
-        error,
-        result,
-        saveUser,
-        token,
-      })
-      return;
     }
 
     res.json({
       error,
       result,
-    })
+      saveUser,
+      token,
+    });
     return;
   }
 
   // register & participate
-  if (error.length == 0 && idCleanwalk !== undefined) {
+  else if (error.length == 0 && idCleanwalk !== undefined) {
     let found = await cityModel.findOne({ cityCode: code });
 
     if (found) {
@@ -153,21 +139,6 @@ router.post("/sign-up", async function (req, res, next) {
 
         result = true;
         token = saveUser.token;
-
-        res.json({
-          error,
-          result,
-          saveUser,
-          token,
-          newParticipant,
-        })
-        return;
-      } else {
-        res.json({
-          error,
-          result,
-        })
-        return;
       }
     }
 
@@ -205,23 +176,16 @@ router.post("/sign-up", async function (req, res, next) {
 
         result = true;
         token = saveUser.token;
-
-        res.json({
-          error,
-          result,
-          saveUser,
-          token,
-          newParticipant,
-        });
-        return;
-      } else {
-        res.json({
-          error,
-          result,
-        });
-        return;
       }
     }
+    res.json({
+      error,
+      result,
+      saveUser,
+      token,
+      newParticipant,
+    });
+    return;
   }
 });
 
@@ -256,13 +220,10 @@ router.post("/sign-in", async function (req, res, next) {
     } else {
       error.push("Email incorrect.");
     }
-
-    res.json({ error, result, user, token });
-    return;
   }
 
   // sign-in & participate
-  if (error.length == 0 && idCleanwalk !== undefined) {
+  else if (error.length == 0 && idCleanwalk !== undefined) {
     user = await userModel.findOne({
       email: req.body.emailFromFront,
     });
@@ -289,10 +250,6 @@ router.post("/sign-in", async function (req, res, next) {
     res.json({ error, result, user, token, newParticipant });
   }
 
-  res.json({
-    error,
-    result,
-  });
 });
 
 module.exports = router;
