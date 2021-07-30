@@ -75,19 +75,32 @@ router.post('/load-pin-on-change-region', async function(req, res, next) {
 /*load-city-ranking*/
 router.get('/load-cleanwalk', async function(req, res, next) {
 
-  let cwpercity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: 1 } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}}])
+  let pointsPerCw = 5;
+
+  let cwpercity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: pointsPerCw } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}}])
   console.log(cwpercity);
 
   let token = req.query.token
   let user = await userModel.find({token: token});
 
   if(user.length > 0) {
-    let userCity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: 1 } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}},{$match: {"_id": user[0].city}}])
+    let userCity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: pointsPerCw } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}},{$match: {"_id": user[0].city}}])
     console.log(userCity);
-    res.json({result: true, ranking: cwpercity, myCity: userCity});
-  }
 
+    cwpercity = cwpercity.map(obj => {
+      let copy = {...obj};
+      if (obj["_id"].toString() === userCity[0]["_id"].toString()) {
+        copy.isMyCity = true;
+      } else {
+        copy.isMyCity = false;
+      }
+      return (copy)
+    })
+
+    res.json({result: true, ranking: cwpercity, myCity: userCity});
+  } else {
   res.json({result: false, error: "user not found"});
+}
 }); 
 
 module.exports = router;
