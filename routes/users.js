@@ -188,7 +188,7 @@ router.post("/sign-up", async function (req, res, next) {
         firstName: req.body.firstNameFromFront,
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
-        city: found._id,
+        city: citySaved._id,
         password: hash,
         token: uid2(32),
       });
