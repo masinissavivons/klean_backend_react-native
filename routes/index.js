@@ -2,7 +2,8 @@ var express = require('express');
 var router = express.Router();
 var request = require('sync-request');
 
-var cleanwalkModel = require('../models/cleanwalks');
+let cleanwalkModel = require('../models/cleanwalks');
+let userModel = require("../models/users");
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -70,5 +71,23 @@ router.post('/load-pin-on-change-region', async function(req, res, next) {
 
   res.json({result: true, cleanWalkArray: cleanWalkRequest});
 });
+
+/*load-city-ranking*/
+router.get('/load-cleanwalk', async function(req, res, next) {
+
+  let cwpercity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: 1 } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}}])
+  console.log(cwpercity);
+
+  let token = req.query.token
+  let user = await userModel.find({token: token});
+
+  if(user.length > 0) {
+    let userCity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: 1 } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}},{$match: {"_id": user[0].city}}])
+    console.log(userCity);
+    res.json({result: true, ranking: cwpercity, myCity: userCity});
+  }
+
+  res.json({result: false, error: "user not found"});
+}); 
 
 module.exports = router;
