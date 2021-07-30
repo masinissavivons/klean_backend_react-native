@@ -224,6 +224,8 @@ router.post("/sign-in", async function (req, res, next) {
     } else {
       error.push("Email incorrect.");
     }
+    res.json({ error, result, user, token });
+    return;
   }
 
   // sign-in & participate
