@@ -139,11 +139,11 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 });
 
 // load-profil
-router.get('/load-profil/:token', async function(req, res, next) {
+router.get('/load-profil/:token', async function (req, res, next) {
 
   //var cleanwalk = await cleanwalkModel.findById(req.params.idCW).populate('cleanwalkCity').populate('participantsList').populate('admin').exec();
 
-  res.json({result: true});
+  res.json({ result: true });
 });
 
 // subscribe to cleanwalk
@@ -164,34 +164,42 @@ router.get('/load-profil/:token', async function(req, res, next) {
 
 
 /*load message*/
-router.get('/load-messages/:token/:cwid', async function(req, res, next) {
+router.get('/load-messages/:token/:cwid', async function (req, res, next) {
 
-  let cleanwalk = await cleanwalkModel.find({_id: req.params.cwid});
-  console.log(cleanwalk)
+  let cleanwalk = await cleanwalkModel.find({ _id: req.params.cwid });
   let messages = cleanwalk[0].messages
-  console.log(messages)
 
-  res.json({result: true, messages});
+  res.json({ result: true, messages });
 });
 
 
 /*save message*/
-router.post("/save-messages", async function(req, res, next) {
- 
-  let cleanwalk = await cleanwalkModel.find({_id: req.body.cwid});
-  
-  cleanwalk[0].messages.push({
+router.post("/save-message", async function (req, res, next) {
 
+  let token = req.body.token
+  let cwid = req.body.cwid
+  let message = JSON.parse(req.body.message)
+  let date = JSON.parse(req.body.date)
+
+
+  let cleanwalk = await cleanwalkModel.find({ _id: cwid });
+  let user = await userModel.find({token: token})
+  let sender = user[0].firstName
+
+  cleanwalk[0].messages.push({
+      user: sender,
+      message: message,
+      date: date
   })
 
-  res.json({result: true, messages});
+  let cleanwalkSaved = await cleanwalk[0].save()
+
+  if (cleanwalkSaved) {
+    res.json({ result: true, messages: cleanwalkSaved.messages });
+  } else {
+    res.json({ result: true, error: "Couldn't save the message" });
+  }
 });
-
-
-
-
-
-
 
 
 
