@@ -160,4 +160,39 @@ router.get('/load-profil/:token', async function(req, res, next) {
 //   res.json({ result: true, cleanwalk });
 // });
 
+
+
+
+/*load message*/
+router.get('/load-messages/:token/:cwid', async function(req, res, next) {
+
+  let cleanwalk = await cleanwalkModel.find({_id: req.params.cwid});
+  console.log(cleanwalk)
+  let messages = cleanwalk[0].messages
+  console.log(messages)
+
+  res.json({result: true, messages});
+});
+
+
+/*save message*/
+router.post("/save-messages", async function(req, res, next) {
+ 
+  let cleanwalk = await cleanwalkModel.find({_id: req.body.cwid});
+  
+  cleanwalk[0].messages.push({
+
+  })
+
+  res.json({result: true, messages});
+});
+
+
+
+
+
+
+
+
+
 module.exports = router;
