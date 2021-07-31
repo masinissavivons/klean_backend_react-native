@@ -141,9 +141,19 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 // load-profil
 router.get('/load-profil/:token', async function(req, res, next) {
 
-  //var cleanwalk = await cleanwalkModel.findById(req.params.idCW).populate('cleanwalkCity').populate('participantsList').populate('admin').exec();
+  let token = req.params.token;
+  let user = await userModel.findOne({ token: token });
 
-  res.json({result: true});
+  if (user) {
+
+    let userId = user._id;
+    //console.log('userId:', userId);
+
+    //res.json({ result: true, profil: profilObj });
+    res.json({ result: true });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
 // subscribe to cleanwalk
