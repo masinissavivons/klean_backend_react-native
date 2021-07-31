@@ -142,15 +142,41 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 router.get('/load-profil/:token', async function(req, res, next) {
 
   let token = req.params.token;
-  let user = await userModel.findOne({ token: token });
+  let user = await userModel
+    .findOne({ token: token })
+    .populate("city")
+    .exec();
 
   if (user) {
 
     let userId = user._id;
-    //console.log('userId:', userId);
+
+    // unwind éclate le tableau 'participantsList' dans l'objet cleanwalk, il fait autant d'objet qu'il y a d'élément dans le tableau
+    // cela devient une clé 'participantsList' de l'objet cleanwalk
+    // on fait ensuite un match pour ne garder que ceux qui ont comme valeur l'id de l'user
+    let cleanwalksParticipate = await cleanwalkModel.aggregate([{ $unwind : "$participantsList" }, {$match: {"participantsList": userId}}]);
+    
+    //console.log('cleanwalksParticipate', cleanwalksParticipate);
+
+    const infosCWparticipate = cleanwalksParticipate.map( cleanwalk => {
+      return {
+        id: cleanwalk._id,
+        title: cleanwalk.cleanwalkTitle,
+        date: cleanwalk.startingDate
+      }
+    });
+
+    const infosUser = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      city: user.city.cityName
+    }
+
+    console.log('infosUser', infosUser);
 
     //res.json({ result: true, profil: profilObj });
-    res.json({ result: true });
+    res.json({ result: true, infosCWparticipate, infosUser });
   } else {
     res.json({ result: false, error: "user not found" });
   }
