@@ -141,8 +141,7 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 // load-profil
 router.get("/load-profil/:token", async function (req, res, next) {
   const token = req.params.token;
-  const user = await userModel
-    .findOne({ token: token })
+  const user = await userModel.findOne({ token: token });
 
   if (user) {
     const userId = user._id;
@@ -150,12 +149,6 @@ router.get("/load-profil/:token", async function (req, res, next) {
     // unwind éclate le tableau 'participantsList' dans l'objet cleanwalk, il fait autant d'objet qu'il y a d'élément dans le tableau
     // cela devient une clé 'participantsList' de l'objet cleanwalk
     // on fait ensuite un match pour ne garder que ceux qui ont comme valeur l'id de l'user
-<<<<<<< HEAD
-    const cleanwalksParticipate = await cleanwalkModel.aggregate([{ $unwind: "$participantsList" }, { $match: { "participantsList": userId } }]);
-
-    // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos qu'on a besoin
-    const infosCWparticipate = cleanwalksParticipate.map(cleanwalk => {
-=======
     const cleanwalksParticipate = await cleanwalkModel.aggregate([
       { $unwind: "$participantsList" },
       { $match: { participantsList: userId } },
@@ -163,7 +156,6 @@ router.get("/load-profil/:token", async function (req, res, next) {
 
     // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos qu'on a besoin
     const infosCWparticipate = cleanwalksParticipate.map((cleanwalk) => {
->>>>>>> f9ffbcbab652d6fcc0b0d9b9db5bc62948cbb15f
       return {
         id: cleanwalk._id,
         title: cleanwalk.cleanwalkTitle,
@@ -171,19 +163,11 @@ router.get("/load-profil/:token", async function (req, res, next) {
       };
     });
 
-<<<<<<< HEAD
-    // récup des cleanwalks qu'organise le user 
-    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId });
-
-    // Création du tableau d'objets des CW qu'ils organisent avec uniquement les infos qu'on a besoin
-    const infosCWorganize = cleanwalksOrganize.map(cleanwalk => {
-=======
     // récup des cleanwalks qu'organise le user
     const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId });
 
     // Création du tableau d'objets des CW qu'ils organisent avec uniquement les infos qu'on a besoin
     const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
->>>>>>> f9ffbcbab652d6fcc0b0d9b9db5bc62948cbb15f
       return {
         id: cleanwalk._id,
         title: cleanwalk.cleanwalkTitle,
@@ -195,8 +179,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
     const infosUser = {
       firstName: user.firstName,
       lastName: user.lastName,
-      email: user.email,
-      city: user.city.cityName,
+      email: user.email
     };
 
     //Statistiques personnelles
@@ -255,24 +238,14 @@ router.post("/save-message", async function (req, res, next) {
   let date = JSON.parse(req.body.date);
 
   let cleanwalk = await cleanwalkModel.find({ _id: cwid });
-<<<<<<< HEAD
-  let user = await userModel.find({ token: token })
-  let sender = user[0].firstName
-=======
   let user = await userModel.find({ token: token });
   let sender = user[0].firstName;
->>>>>>> f9ffbcbab652d6fcc0b0d9b9db5bc62948cbb15f
 
   cleanwalk[0].messages.push({
     user: sender,
     message: message,
-<<<<<<< HEAD
-    date: date
-  })
-=======
     date: date,
   });
->>>>>>> f9ffbcbab652d6fcc0b0d9b9db5bc62948cbb15f
 
   let cleanwalkSaved = await cleanwalk[0].save();
 
