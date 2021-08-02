@@ -139,10 +139,58 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 });
 
 // load-profil
-router.get("/load-profil/:token", async function (req, res, next) {
-  //var cleanwalk = await cleanwalkModel.findById(req.params.idCW).populate('cleanwalkCity').populate('participantsList').populate('admin').exec();
+router.get('/load-profil/:token', async function (req, res, next) {
 
-  res.json({ result: true });
+  const token = req.params.token;
+  const user = await userModel
+    .findOne({ token: token })
+    .populate("city")
+    .exec();
+
+  if (user) {
+
+    const userId = user._id;
+
+    // unwind éclate le tableau 'participantsList' dans l'objet cleanwalk, il fait autant d'objet qu'il y a d'élément dans le tableau
+    // cela devient une clé 'participantsList' de l'objet cleanwalk
+    // on fait ensuite un match pour ne garder que ceux qui ont comme valeur l'id de l'user
+    const cleanwalksParticipate = await cleanwalkModel.aggregate([{ $unwind : "$participantsList" }, {$match: {"participantsList": userId}}]);
+    
+    // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos qu'on a besoin
+    const infosCWparticipate = cleanwalksParticipate.map( cleanwalk => {
+      return {
+        id: cleanwalk._id,
+        title: cleanwalk.cleanwalkTitle,
+        date: cleanwalk.startingDate
+      }
+    });
+
+    // récup des cleanwalks qu'organise le user 
+    const cleanwalksOrganize = await cleanwalkModel.find({ admin : userId});
+
+    // Création du tableau d'objets des CW qu'ils organisent avec uniquement les infos qu'on a besoin
+    const infosCWorganize = cleanwalksOrganize.map( cleanwalk => {
+      return {
+        id: cleanwalk._id,
+        title: cleanwalk.cleanwalkTitle,
+        date: cleanwalk.startingDate
+      }
+    });
+
+    // création d'un objet avec uniquement les infos du user qu'on veut afficher ds le screen profil
+    const infosUser = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      city: user.city.cityName
+    }
+
+    //console.log('infosUser', infosUser);
+
+    res.json({ result: true, infosCWparticipate, infosCWorganize, infosUser });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
 // subscribe to cleanwalk
