@@ -139,8 +139,7 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 });
 
 // load-profil
-router.get('/load-profil/:token', async function (req, res, next) {
-
+router.get("/load-profil/:token", async function (req, res, next) {
   const token = req.params.token;
   const user = await userModel
     .findOne({ token: token })
@@ -148,33 +147,35 @@ router.get('/load-profil/:token', async function (req, res, next) {
     .exec();
 
   if (user) {
-
     const userId = user._id;
 
     // unwind éclate le tableau 'participantsList' dans l'objet cleanwalk, il fait autant d'objet qu'il y a d'élément dans le tableau
     // cela devient une clé 'participantsList' de l'objet cleanwalk
     // on fait ensuite un match pour ne garder que ceux qui ont comme valeur l'id de l'user
-    const cleanwalksParticipate = await cleanwalkModel.aggregate([{ $unwind : "$participantsList" }, {$match: {"participantsList": userId}}]);
-    
+    const cleanwalksParticipate = await cleanwalkModel.aggregate([
+      { $unwind: "$participantsList" },
+      { $match: { participantsList: userId } },
+    ]);
+
     // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos qu'on a besoin
-    const infosCWparticipate = cleanwalksParticipate.map( cleanwalk => {
+    const infosCWparticipate = cleanwalksParticipate.map((cleanwalk) => {
       return {
         id: cleanwalk._id,
         title: cleanwalk.cleanwalkTitle,
-        date: cleanwalk.startingDate
-      }
+        date: cleanwalk.startingDate,
+      };
     });
 
-    // récup des cleanwalks qu'organise le user 
-    const cleanwalksOrganize = await cleanwalkModel.find({ admin : userId});
+    // récup des cleanwalks qu'organise le user
+    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId });
 
     // Création du tableau d'objets des CW qu'ils organisent avec uniquement les infos qu'on a besoin
-    const infosCWorganize = cleanwalksOrganize.map( cleanwalk => {
+    const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
       return {
         id: cleanwalk._id,
         title: cleanwalk.cleanwalkTitle,
-        date: cleanwalk.startingDate
-      }
+        date: cleanwalk.startingDate,
+      };
     });
 
     // création d'un objet avec uniquement les infos du user qu'on veut afficher ds le screen profil
@@ -182,8 +183,8 @@ router.get('/load-profil/:token', async function (req, res, next) {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      city: user.city.cityName
-    }
+      city: user.city.cityName,
+    };
 
     //console.log('infosUser', infosUser);
 
@@ -243,7 +244,10 @@ router.post("/save-message", async function (req, res, next) {
 
 // /get-city-from-coordinates   --> proposer une cleanwalk
 router.post("/get-city-from-coordinates", function (req, res, next) {
-  let requete = request("GET", `https://api-adresse.data.gouv.fr/reverse/?lon=${req.body.lonFromFront}&lat=${req.body.latFromFront}`);
+  let requete = request(
+    "GET",
+    `https://api-adresse.data.gouv.fr/reverse/?lon=${req.body.lonFromFront}&lat=${req.body.latFromFront}`
+  );
   let response = JSON.parse(requete.body);
 
   res.json({ result: true, response: response });
