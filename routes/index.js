@@ -139,8 +139,7 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 });
 
 // load-profil
-router.get('/load-profil/:token', async function (req, res, next) {
-
+router.get("/load-profil/:token", async function (req, res, next) {
   //var cleanwalk = await cleanwalkModel.findById(req.params.idCW).populate('cleanwalkCity').populate('participantsList').populate('admin').exec();
 
   res.json({ result: true });
@@ -160,39 +159,32 @@ router.get('/load-profil/:token', async function (req, res, next) {
 //   res.json({ result: true, cleanwalk });
 // });
 
-
-
-
 /*load message*/
-router.get('/load-messages/:token/:cwid', async function (req, res, next) {
-
+router.get("/load-messages/:token/:cwid", async function (req, res, next) {
   let cleanwalk = await cleanwalkModel.find({ _id: req.params.cwid });
-  let messages = cleanwalk[0].messages
+  let messages = cleanwalk[0].messages;
 
   res.json({ result: true, messages });
 });
 
-
 /*save message*/
 router.post("/save-message", async function (req, res, next) {
-
-  let token = req.body.token
-  let cwid = req.body.cwid
-  let message = JSON.parse(req.body.message)
-  let date = JSON.parse(req.body.date)
-
+  let token = req.body.token;
+  let cwid = req.body.cwid;
+  let message = JSON.parse(req.body.message);
+  let date = JSON.parse(req.body.date);
 
   let cleanwalk = await cleanwalkModel.find({ _id: cwid });
-  let user = await userModel.find({token: token})
-  let sender = user[0].firstName
+  let user = await userModel.find({ token: token });
+  let sender = user[0].firstName;
 
   cleanwalk[0].messages.push({
-      user: sender,
-      message: message,
-      date: date
-  })
+    user: sender,
+    message: message,
+    date: date,
+  });
 
-  let cleanwalkSaved = await cleanwalk[0].save()
+  let cleanwalkSaved = await cleanwalk[0].save();
 
   if (cleanwalkSaved) {
     res.json({ result: true, messages: cleanwalkSaved.messages });
@@ -201,6 +193,12 @@ router.post("/save-message", async function (req, res, next) {
   }
 });
 
+// /get-city-from-coordinates   --> proposer une cleanwalk
+router.post("/get-city-from-coordinates", function (req, res, next) {
+  let requete = request("GET", `https://api-adresse.data.gouv.fr/reverse/?lon=${req.body.lonFromFront}&lat=${req.body.latFromFront}`);
+  let response = JSON.parse(requete.body);
 
+  res.json({ result: true, response: response });
+});
 
 module.exports = router;
