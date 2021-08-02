@@ -201,6 +201,34 @@ router.post("/save-message", async function (req, res, next) {
   }
 });
 
+// create-cw
+router.post("/create-cw", async function (req, res, next) {
+  
+  var addCW = new cleanwalkModel ({
+
+    cleanwalkTitle: req.body.title,
+    cleanwalkDescription: req.body.description,
+    // cleanwalkCity: req.body.city,
+    // cleanwalkCoordinates: req.body.coordCW,
+    // startingDate: req.body.startingDate,
+    // endingDate: req.body.endingDate,
+    toolBadge: req.body.tool,
+    // admin: req.body.token,
+
+  })
+
+  var cleanwalkSave = await addCW.save()
+
+  var result = false
+  if(cleanwalkSave.cleanwalkTitle) {
+    result = true
+  }
+
+  console.log(cleanwalkSave)
+  console.log("result", result)
+
+  res.json({ result });
+});
 
 
 module.exports = router;
