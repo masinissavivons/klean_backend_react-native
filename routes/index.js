@@ -244,6 +244,10 @@ router.post("/save-message", async function (req, res, next) {
 
 // create-cw
 router.post("/create-cw", async function (req, res, next) {
+
+  let cityInfo = JSON.parse(req.body.city)
+
+  console.log("truc", cityInfo)
   
   var addCW = new cleanwalkModel ({
 
