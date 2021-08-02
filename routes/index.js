@@ -248,7 +248,8 @@ router.post("/save-message", async function (req, res, next) {
 router.post("/create-cw", async function (req, res, next) {
   let cityInfo = JSON.parse(req.body.city);
   let code = cityInfo.cityCode;
-  // let user = 
+  let userToken = req.body.token;
+  let user = await userModel.findOne({token: userToken})
 
   let found = await cityModel.findOne({ cityCode: code });
   var result = false;
@@ -263,10 +264,10 @@ router.post("/create-cw", async function (req, res, next) {
         longitude: cityInfo.cityCoordinates[0],
         latitude: cityInfo.cityCoordinates[1],
       },
-      // startingDate: req.body.startingDate,
-      // endingDate: req.body.endingDate,
+      startingDate: req.body.startingDate,
+      endingDate: req.body.endingDate,
       toolBadge: req.body.tool,
-      // admin: user.token,
+      admin: user._id,
     });
 
     var cleanwalkSave = await addCW.save();
