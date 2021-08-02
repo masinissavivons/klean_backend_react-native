@@ -141,6 +141,7 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 // load-profil
 router.get("/load-profil/:token", async function (req, res, next) {
   const token = req.params.token;
+  const date = new Date();
   const user = await userModel.findOne({ token: token });
 
   if (user) {
@@ -152,6 +153,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
     const cleanwalksParticipate = await cleanwalkModel.aggregate([
       { $unwind: "$participantsList" },
       { $match: { participantsList: userId } },
+      { $match: { startingDate: { $gte: date } } }
     ]);
 
     // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos qu'on a besoin
@@ -164,7 +166,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
     });
 
     // récup des cleanwalks qu'organise le user
-    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId });
+    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId, startingDate: { $gte: date } });
 
     // Création du tableau d'objets des CW qu'ils organisent avec uniquement les infos qu'on a besoin
     const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
