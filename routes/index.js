@@ -1,6 +1,8 @@
+const { closeDelimiter } = require("ejs");
 var express = require("express");
 var router = express.Router();
 var request = require("sync-request");
+const cityModel = require("../models/cities");
 
 let cleanwalkModel = require("../models/cleanwalks");
 let userModel = require("../models/users");
@@ -244,33 +246,39 @@ router.post("/save-message", async function (req, res, next) {
 
 // create-cw
 router.post("/create-cw", async function (req, res, next) {
+  let cityInfo = JSON.parse(req.body.city);
+  let code = cityInfo.cityCode;
+  // let user = 
 
-  let cityInfo = JSON.parse(req.body.city)
+  let found = await cityModel.findOne({ cityCode: code });
+  var result = false;
 
-  console.log("truc", cityInfo)
-  
-  var addCW = new cleanwalkModel ({
+  if (found) {
+    console.log("blabla: ", found._id);
+    var addCW = new cleanwalkModel({
+      cleanwalkTitle: req.body.title,
+      cleanwalkDescription: req.body.description,
+      cleanwalkCity: found._id,
+      cleanwalkCoordinates: {
+        longitude: cityInfo.cityCoordinates[0],
+        latitude: cityInfo.cityCoordinates[1],
+      },
+      // startingDate: req.body.startingDate,
+      // endingDate: req.body.endingDate,
+      toolBadge: req.body.tool,
+      // admin: user.token,
+    });
 
-    cleanwalkTitle: req.body.title,
-    cleanwalkDescription: req.body.description,
-    // cleanwalkCity: req.body.city,
-    // cleanwalkCoordinates: req.body.coordCW,
-    // startingDate: req.body.startingDate,
-    // endingDate: req.body.endingDate,
-    toolBadge: req.body.tool,
-    // admin: req.body.token,
-
-  })
-
-  var cleanwalkSave = await addCW.save()
-
-  var result = false
-  if(cleanwalkSave.cleanwalkTitle) {
-    result = true
+    var cleanwalkSave = await addCW.save();
   }
-
-  console.log(cleanwalkSave)
-  console.log("result", result)
+  // if (found == null) {
+  //   let newCity = cityModel({
+  //     cityName: req.body.city,
+  //     cityCoordinbates: req.body.,
+  //     population:,
+  //     cityCode
+  //   });
+  // }
 
   res.json({ result });
 });
@@ -282,8 +290,31 @@ router.post("/get-city-from-coordinates", function (req, res, next) {
     `https://api-adresse.data.gouv.fr/reverse/?lon=${req.body.lonFromFront}&lat=${req.body.latFromFront}`
   );
   let response = JSON.parse(requete.body);
+  // console.log("réponse API: ", response);
 
   res.json({ result: true, response: response });
+});
+
+/*search-city-only*/
+router.post("/search-city-only", function (req, res, next) {
+  let cityRegex = /arrondissement/i;
+
+  let requete = request(
+    "GET",
+    `https://api-adresse.data.gouv.fr/search/?q=${req.body.city}&type=municipality`
+  );
+  let response = JSON.parse(requete.body);
+  let newResponse = response.features.filter(
+    (obj) => !cityRegex.test(obj.properties.label)
+  );
+  // console.log("newResponse", newResponse);
+  newResponse = newResponse.map((obj) => {
+    let copy = { ...obj };
+    copy.properties.label = copy.properties.city;
+    return copy;
+  });
+
+  res.json({ result: true, newResponse });
 });
 
 module.exports = router;
