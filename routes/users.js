@@ -45,7 +45,7 @@ router.post("/sign-up", async function (req, res, next) {
   }
 
   let cityInfo = JSON.parse(req.body.cityInfo);
-  console.log("cityInfo: ", cityInfo);
+  // console.log("cityInfo: ", cityInfo);
   let code = cityInfo.properties.citycode;
   let coordinates = cityInfo.geometry.coordinates;
   let population = cityInfo.properties.population;
