@@ -143,10 +143,8 @@ router.get("/load-cities-ranking", async function (req, res, next) {
 // load-profil
 router.get("/load-profil/:token", async function (req, res, next) {
   const token = req.params.token;
-  const user = await userModel
-    .findOne({ token: token })
-    .populate("city")
-    .exec();
+  const date = new Date();
+  const user = await userModel.findOne({ token: token });
 
   if (user) {
     const userId = user._id;
@@ -154,9 +152,11 @@ router.get("/load-profil/:token", async function (req, res, next) {
     // unwind éclate le tableau 'participantsList' dans l'objet cleanwalk, il fait autant d'objet qu'il y a d'élément dans le tableau
     // cela devient une clé 'participantsList' de l'objet cleanwalk
     // on fait ensuite un match pour ne garder que ceux qui ont comme valeur l'id de l'user
+    // puis on fait un match avec la date du jour avec une query pour afficher que celles qui ne sont pas dépassées
     const cleanwalksParticipate = await cleanwalkModel.aggregate([
       { $unwind: "$participantsList" },
       { $match: { participantsList: userId } },
+      { $match: { startingDate: { $gte: date } } }
     ]);
 
     // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos qu'on a besoin
@@ -169,7 +169,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
     });
 
     // récup des cleanwalks qu'organise le user
-    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId });
+    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId, startingDate: { $gte: date } });
 
     // Création du tableau d'objets des CW qu'ils organisent avec uniquement les infos qu'on a besoin
     const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
@@ -184,13 +184,30 @@ router.get("/load-profil/:token", async function (req, res, next) {
     const infosUser = {
       firstName: user.firstName,
       lastName: user.lastName,
-      email: user.email,
-      city: user.city.cityName,
+      email: user.email
     };
 
-    //console.log('infosUser', infosUser);
+    //Statistiques personnelles
+    let ArrStatPerso = infosCWorganize.concat(infosCWparticipate);
 
-    res.json({ result: true, infosCWparticipate, infosCWorganize, infosUser });
+    //statistiques de ma ville
+    let pointsPerCw = 5;
+
+    let cwpercity = await cleanwalkModel.aggregate([
+      { $group: { _id: "$cleanwalkCity", points: { $sum: pointsPerCw } } },
+      { $sort: { count: -1 } },
+      {
+        $lookup: {
+          from: "cities",
+          localField: "_id",
+          foreignField: "_id",
+          as: "city_info",
+        },
+      },
+      { $match: { "_id": user.city } }
+    ]);
+
+    res.json({ result: true, infosCWparticipate, infosCWorganize, infosUser, statPerso: ArrStatPerso.length, statCity: cwpercity[0] });
   } else {
     res.json({ result: false, error: "user not found" });
   }
@@ -316,6 +333,49 @@ router.post("/search-city-only", function (req, res, next) {
   });
 
   res.json({ result: true, newResponse });
+
+// /load-cw-forstore
+router.get("/load-cw-forstore/:token", async function (req, res, next) {
+  const token = req.params.token;
+  //console.log('token load-cw-forstore', token);
+
+  const date = new Date();
+  const user = await userModel.findOne({ token: token });
+
+  if (user) {
+    const userId = user._id;
+
+    // unwind éclate le tableau 'participantsList' dans l'objet cleanwalk, il fait autant d'objet qu'il y a d'élément dans le tableau
+    // cela devient une clé 'participantsList' de l'objet cleanwalk
+    // on fait ensuite un match pour ne garder que ceux qui ont comme valeur l'id de l'user
+    // puis on fait un match avec la date du jour avec une query pour afficher que celles qui ne sont pas dépassées
+    const cleanwalksParticipate = await cleanwalkModel.aggregate([
+      { $unwind: "$participantsList" },
+      { $match: { participantsList: userId } },
+      { $match: { startingDate: { $gte: date } } }
+    ]);
+
+    // Création du tableau d'objets des CW auquelles ils participent avec uniquement les ids des CW
+    const infosCWparticipate = cleanwalksParticipate.map((cleanwalk) => {
+      return {
+        id: cleanwalk._id
+      };
+    });
+
+    // récup des cleanwalks qu'organise le user
+    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId, startingDate: { $gte: date } });
+
+    // Création du tableau d'objets des CW qu'ils organisent avec uniquement les ids des CW
+    const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
+      return {
+        id: cleanwalk._id
+      };
+    });
+
+    res.json({ result: true, infosCWparticipate, infosCWorganize});
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
 module.exports = router;
