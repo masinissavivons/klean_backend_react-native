@@ -156,7 +156,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
     const cleanwalksParticipate = await cleanwalkModel.aggregate([
       { $unwind: "$participantsList" },
       { $match: { participantsList: userId } },
-      { $match: { startingDate: { $gte: date } } }
+      { $match: { startingDate: { $gte: date } } },
     ]);
 
     // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos qu'on a besoin
@@ -169,7 +169,10 @@ router.get("/load-profil/:token", async function (req, res, next) {
     });
 
     // récup des cleanwalks qu'organise le user
-    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId, startingDate: { $gte: date } });
+    const cleanwalksOrganize = await cleanwalkModel.find({
+      admin: userId,
+      startingDate: { $gte: date },
+    });
 
     // Création du tableau d'objets des CW qu'ils organisent avec uniquement les infos qu'on a besoin
     const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
@@ -184,7 +187,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
     const infosUser = {
       firstName: user.firstName,
       lastName: user.lastName,
-      email: user.email
+      email: user.email,
     };
 
     //Statistiques personnelles
@@ -204,10 +207,17 @@ router.get("/load-profil/:token", async function (req, res, next) {
           as: "city_info",
         },
       },
-      { $match: { "_id": user.city } }
+      { $match: { _id: user.city } },
     ]);
 
-    res.json({ result: true, infosCWparticipate, infosCWorganize, infosUser, statPerso: ArrStatPerso.length, statCity: cwpercity[0] });
+    res.json({
+      result: true,
+      infosCWparticipate,
+      infosCWorganize,
+      infosUser,
+      statPerso: ArrStatPerso.length,
+      statCity: cwpercity[0],
+    });
   } else {
     res.json({ result: false, error: "user not found" });
   }
@@ -263,16 +273,29 @@ router.post("/save-message", async function (req, res, next) {
 
 // create-cw
 router.post("/create-cw", async function (req, res, next) {
+  let error = [];
+  var result = false;
+  let resultSaveCleanwalk = false;
+  let resultSaveCity = false;
+
   let cityInfo = JSON.parse(req.body.city);
+  // console.log("cityInfo: ", cityInfo);
   let code = cityInfo.cityCode;
   let userToken = req.body.token;
-  let user = await userModel.findOne({token: userToken})
+  if (
+    req.body.title == "" ||
+    req.body.description == "" ||
+    req.body.startingDate == "" ||
+    req.body.endingDate == "" ||
+    req.body.tool == ""
+  ) {
+    error.push("Tous les champs sont obligatoires. Veuillez les remplir.");
+  }
 
+  let user = await userModel.findOne({ token: userToken });
   let found = await cityModel.findOne({ cityCode: code });
-  var result = false;
 
-  if (found) {
-    console.log("blabla: ", found._id);
+  if (error.length == 0 && found) {
     var addCW = new cleanwalkModel({
       cleanwalkTitle: req.body.title,
       cleanwalkDescription: req.body.description,
@@ -288,17 +311,59 @@ router.post("/create-cw", async function (req, res, next) {
     });
 
     var cleanwalkSave = await addCW.save();
-  }
-  // if (found == null) {
-  //   let newCity = cityModel({
-  //     cityName: req.body.city,
-  //     cityCoordinbates: req.body.,
-  //     population:,
-  //     cityCode
-  //   });
-  // }
 
-  res.json({ result });
+    resultSaveCleanwalk = true;
+    result = true;
+
+    console.log("error back: ", error);
+
+    res.json({ result, error, resultSaveCleanwalk, cleanwalkSave });
+  }
+
+  if (error.length == 0 && found == null) {
+    let newCity = cityModel({
+      cityName: cityInfo.cityName,
+      cityCoordinates: {
+        longitude: cityInfo.cityCoordinates[0],
+        longitude: cityInfo.cityCoordinates[1],
+      },
+      population: cityInfo.cityPopulation,
+      cityCode: cityInfo.cityCode,
+    });
+
+    let citySaved = await newCity.save();
+
+    if (citySaved) {
+      var addCW = new cleanwalkModel({
+        cleanwalkTitle: req.body.title,
+        cleanwalkDescription: req.body.description,
+        cleanwalkCity: citySaved._id,
+        cleanwalkCoordinates: {
+          longitude: cityInfo.cityCoordinates[0],
+          latitude: cityInfo.cityCoordinates[1],
+        },
+        startingDate: req.body.startingDate,
+        endingDate: req.body.endingDate,
+        toolBadge: req.body.tool,
+        admin: user._id,
+      });
+
+      var cleanwalkSave = await addCW.save();
+    }
+
+    resultSaveCleanwalk = true;
+    resultSaveCity = true;
+    result = true;
+
+    res.json({
+      result,
+      error,
+      resultSaveCleanwalk,
+      resultSaveCity,
+    });
+  }
+
+  res.json({ result, error });
 });
 
 // /get-city-from-coordinates   --> proposer une cleanwalk
@@ -353,27 +418,30 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
     const cleanwalksParticipate = await cleanwalkModel.aggregate([
       { $unwind: "$participantsList" },
       { $match: { participantsList: userId } },
-      { $match: { startingDate: { $gte: date } } }
+      { $match: { startingDate: { $gte: date } } },
     ]);
 
     // Création du tableau d'objets des CW auquelles ils participent avec uniquement les ids des CW
     const infosCWparticipate = cleanwalksParticipate.map((cleanwalk) => {
       return {
-        id: cleanwalk._id
+        id: cleanwalk._id,
       };
     });
 
     // récup des cleanwalks qu'organise le user
-    const cleanwalksOrganize = await cleanwalkModel.find({ admin: userId, startingDate: { $gte: date } });
+    const cleanwalksOrganize = await cleanwalkModel.find({
+      admin: userId,
+      startingDate: { $gte: date },
+    });
 
     // Création du tableau d'objets des CW qu'ils organisent avec uniquement les ids des CW
     const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
       return {
-        id: cleanwalk._id
+        id: cleanwalk._id,
       };
     });
 
-    res.json({ result: true, infosCWparticipate, infosCWorganize});
+    res.json({ result: true, infosCWparticipate, infosCWorganize });
   } else {
     res.json({ result: false, error: "user not found" });
   }
