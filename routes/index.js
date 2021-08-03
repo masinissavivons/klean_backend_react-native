@@ -1,4 +1,3 @@
-const { closeDelimiter } = require("ejs");
 var express = require("express");
 var router = express.Router();
 var request = require("sync-request");
@@ -7,96 +6,131 @@ const cityModel = require("../models/cities");
 let cleanwalkModel = require("../models/cleanwalks");
 let userModel = require("../models/users");
 
-/* GET home page. */
-router.get("/", function (req, res, next) {
-  res.render("index", { title: "Express" });
+
+async function tokenIsValidated(token) {
+
+  let userRequest = await userModel.find()
+  let userTokenArr = userRequest.map(obj => obj.token)
+
+  //j'ajoute le token invité
+  userTokenArr.push("XeDLDMr3U4HSJSl74HJpKD")
+
+  if (userTokenArr.every(str => str !== token)) {
+    return false
+  } else {
+    return true
+  }
+}
+
+
+/*AUTOCOMPLETE-SEARCH*/
+router.post("/autocomplete-search", async function (req, res, next) {
+
+  if (await tokenIsValidated(req.body.token)) {
+    let requete = request(
+      "GET",
+      `https://api-adresse.data.gouv.fr/search/?q=${req.body.adress}`
+    );
+    let response = JSON.parse(requete.body);
+
+    res.json({ result: true, response: response.features });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
-/*Autocomplete-search*/
-router.post("/autocomplete-search", function (req, res, next) {
-  let requete = request(
-    "GET",
-    `https://api-adresse.data.gouv.fr/search/?q=${req.body.adress}`
-  );
-  let response = JSON.parse(requete.body);
 
-  res.json({ result: true, response: response.features });
+/*AUTOCOMPLETE-SEARCH-CITY-ONLY*/
+router.post("/autocomplete-search-city-only", async function (req, res, next) {
+
+  if (await tokenIsValidated(req.body.token)) {
+    let cityRegex = /arrondissement/i;
+    let requete = request(
+      "GET",
+      `https://api-adresse.data.gouv.fr/search/?q=${req.body.city}&type=municipality`
+    );
+    let response = JSON.parse(requete.body);
+    let newResponse = response.features.filter(
+      (obj) => !cityRegex.test(obj.properties.label)
+    );
+    // console.log("newResponse", newResponse);
+    newResponse = newResponse.map((obj) => {
+      let copy = { ...obj };
+      copy.properties.label = copy.properties.city;
+      return copy;
+    });
+
+    res.json({ result: true, newResponse });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
-/*Autocomplete-search-city-only*/
-router.post("/autocomplete-search-city-only", function (req, res, next) {
-  let cityRegex = /arrondissement/i;
 
-  let requete = request(
-    "GET",
-    `https://api-adresse.data.gouv.fr/search/?q=${req.body.city}&type=municipality`
-  );
-  let response = JSON.parse(requete.body);
-  let newResponse = response.features.filter(
-    (obj) => !cityRegex.test(obj.properties.label)
-  );
-  // console.log("newResponse", newResponse);
-  newResponse = newResponse.map((obj) => {
-    let copy = { ...obj };
-    copy.properties.label = copy.properties.city;
-    return copy;
-  });
+/*LOAD-CLEANWALK*/
+router.get("/load-cleanwalk/:idCW/:token", async function (req, res, next) {
+  if (await tokenIsValidated(req.params.token)) {
+    var cleanwalk = await cleanwalkModel
+      .findById(req.params.idCW)
+      .populate("cleanwalkCity")
+      .populate("participantsList")
+      .populate("admin")
+      .exec();
 
-  res.json({ result: true, newResponse });
+    res.json({ result: true, cleanwalk });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
-// load-cleanwalk
-router.get("/load-cleanwalk/:idCW", async function (req, res, next) {
-  var cleanwalk = await cleanwalkModel
-    .findById(req.params.idCW)
-    .populate("cleanwalkCity")
-    .populate("participantsList")
-    .populate("admin")
-    .exec();
 
-  res.json({ result: true, cleanwalk });
-});
-
-/*load-pin-on-change-region*/
+/*LOAD-PIN-ON-CHANGE-REGION*/
 router.post("/load-pin-on-change-region", async function (req, res, next) {
-  const coordinateJsonParse = JSON.parse(req.body.coordinate);
-  const dateSearch = req.body.date;
 
-  //on définit la fonction pour calculer les intervals nécessaires à la requête
-  const definePerimeter = (regionLat, regionLong, latD, longD) => {
-    let interval = {
-      lat: { min: regionLat - 0.5 * latD, max: regionLat + 0.5 * latD },
-      long: { min: regionLong - 0.5 * longD, max: regionLong + 0.5 * longD },
+  if (await tokenIsValidated(req.body.token)) {
+
+    const coordinateJsonParse = JSON.parse(req.body.coordinate);
+    const dateSearch = req.body.date;
+
+    //on définit la fonction pour calculer les intervals nécessaires à la requête
+    const definePerimeter = (regionLat, regionLong, latD, longD) => {
+      let interval = {
+        lat: { min: regionLat - 0.5 * latD, max: regionLat + 0.5 * latD },
+        long: { min: regionLong - 0.5 * longD, max: regionLong + 0.5 * longD },
+      };
+      return interval;
     };
-    return interval;
-  };
 
-  //on reçoit via le body les éléments de la région qu'on place en arguments de la fonction
-  let customInterval = definePerimeter(
-    coordinateJsonParse.latitude,
-    coordinateJsonParse.longitude,
-    coordinateJsonParse.latitudeDelta,
-    coordinateJsonParse.longitudeDelta
-  );
+    //on reçoit via le body les éléments de la région qu'on place en arguments de la fonction
+    let customInterval = definePerimeter(
+      coordinateJsonParse.latitude,
+      coordinateJsonParse.longitude,
+      coordinateJsonParse.latitudeDelta,
+      coordinateJsonParse.longitudeDelta
+    );
 
-  //on fait la requete dans MongoDB
-  let cleanWalkRequest = await cleanwalkModel
-    .find()
-    .where("cleanwalkCoordinates.latitude")
-    .gte(customInterval.lat.min)
-    .lte(customInterval.lat.max)
-    .where("cleanwalkCoordinates.longitude")
-    .gte(customInterval.long.min)
-    .lte(customInterval.long.max)
-    .where("startingDate")
-    .gte(dateSearch)
-    .populate("admin")
-    .exec();
+    //on fait la requete dans MongoDB
+    let cleanWalkRequest = await cleanwalkModel
+      .find()
+      .where("cleanwalkCoordinates.latitude")
+      .gte(customInterval.lat.min)
+      .lte(customInterval.lat.max)
+      .where("cleanwalkCoordinates.longitude")
+      .gte(customInterval.long.min)
+      .lte(customInterval.long.max)
+      .where("startingDate")
+      .gte(dateSearch)
+      .populate("admin")
+      .exec();
 
-  res.json({ result: true, cleanWalkArray: cleanWalkRequest });
+    res.json({ result: true, cleanWalkArray: cleanWalkRequest });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
-/*load-cities-ranking*/
+
+/*LOAD-CITIES-RANKING*/
 router.get("/load-cities-ranking", async function (req, res, next) {
   let pointsPerCw = 5;
 
@@ -118,8 +152,6 @@ router.get("/load-cities-ranking", async function (req, res, next) {
   let user = await userModel.find({ token: token });
 
   if (user.length > 0) {
-    /*let userCity = await cleanwalkModel.aggregate([{ $group: { _id: "$cleanwalkCity", count: { $sum: pointsPerCw } } },{$sort: {count: -1}}, {$lookup:{from: "cities",localField: "_id",foreignField: "_id",as: "city_info"}},{$match: {"_id": user[0].city}}])
-    console.log(userCity);*/
 
     cwpercity = cwpercity.map((obj, i) => {
       let copy = {};
@@ -140,7 +172,7 @@ router.get("/load-cities-ranking", async function (req, res, next) {
   }
 });
 
-// load-profil
+/*LOAD-PROFIL*/
 router.get("/load-profil/:token", async function (req, res, next) {
   const token = req.params.token;
   const date = new Date();
@@ -223,41 +255,94 @@ router.get("/load-profil/:token", async function (req, res, next) {
   }
 });
 
-/*load message*/
-router.get("/load-messages/:token/:cwid", async function (req, res, next) {
-  let cleanwalk = await cleanwalkModel.find({ _id: req.params.cwid });
-  let messages = cleanwalk[0].messages;
+// unsubscribe to cleanwalk
+router.post("/unsubscribe-cw", async function (req, res, next) {
 
-  res.json({ result: true, messages });
-});
+  const token = req.body.token;
+  const idCW = req.body.idCW;
+  const user = await userModel.findOne({ token: token });
 
-/*save message*/
-router.post("/save-message", async function (req, res, next) {
-  let token = req.body.token;
-  let cwid = req.body.cwid;
-  let message = JSON.parse(req.body.message);
-  let date = JSON.parse(req.body.date);
+  if (user) {
 
-  let cleanwalk = await cleanwalkModel.find({ _id: cwid });
-  let user = await userModel.find({ token: token });
-  let sender = user[0].firstName;
+    await cleanwalkModel.updateOne(
+      { _id: idCW },
+      { $pull: { participantsList: user._id } }
+    );
 
-  cleanwalk[0].messages.push({
-    user: sender,
-    message: message,
-    date: date,
-  });
-
-  let cleanwalkSaved = await cleanwalk[0].save();
-
-  if (cleanwalkSaved) {
-    res.json({ result: true, messages: cleanwalkSaved.messages });
+    res.json({ result: true });
   } else {
-    res.json({ result: true, error: "Couldn't save the message" });
+    res.json({ result: false, error: "user not found" });
   }
 });
 
-// create-cw
+// delete to cleanwalk
+router.delete("/delete-cw/:token/:idCW", async function (req, res, next) {
+
+  const token = req.params.token;
+  const idCW = req.params.idCW;
+
+  const user = await userModel.findOne({ token: token });
+
+  if (user) {
+
+    await cleanwalkModel.deleteOne(
+      { _id: idCW }
+    );
+
+    res.json({ result: true });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
+});
+
+/*LOAD MESSAGE*/
+router.get("/load-messages/:token/:cwid", async function (req, res, next) {
+
+  if (await tokenIsValidated(req.params.token)) {
+
+    let cleanwalk = await cleanwalkModel.find({ _id: req.params.cwid });
+    let messages = cleanwalk[0].messages;
+
+    res.json({ result: true, messages });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
+});
+
+
+/*SAVE-MESSAGE*/
+router.post("/save-message", async function (req, res, next) {
+
+  if (await tokenIsValidated(req.body.token)) {
+
+    let token = req.body.token;
+    let cwid = req.body.cwid;
+    let message = JSON.parse(req.body.message);
+    let date = JSON.parse(req.body.date);
+
+    let cleanwalk = await cleanwalkModel.find({ _id: cwid });
+    let user = await userModel.find({ token: token });
+    let sender = user[0].firstName;
+
+    cleanwalk[0].messages.push({
+      user: sender,
+      message: message,
+      date: date,
+    });
+
+    let cleanwalkSaved = await cleanwalk[0].save();
+
+    if (cleanwalkSaved) {
+      res.json({ result: true, messages: cleanwalkSaved.messages });
+    } else {
+      res.json({ result: true, error: "Couldn't save the message" });
+    }
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
+});
+
+/*CREATE-CW*/
 router.post("/create-cw", async function (req, res, next) {
   let error = [];
   var result = false;
@@ -353,6 +438,7 @@ router.post("/create-cw", async function (req, res, next) {
   res.json({ result, error });
 });
 
+
 // subscribe to cleanwalk
 router.post("/subscribe-cw", async function (req, res, next) {
   let error = [];
@@ -371,39 +457,54 @@ router.post("/subscribe-cw", async function (req, res, next) {
   }
 });
 
-// /get-city-from-coordinates   --> proposer une cleanwalk
-router.post("/get-city-from-coordinates", function (req, res, next) {
-  let requete = request(
-    "GET",
-    `https://api-adresse.data.gouv.fr/reverse/?lon=${req.body.lonFromFront}&lat=${req.body.latFromFront}`
-  );
-  let response = JSON.parse(requete.body);
+/*GET-CITY-FROM-COORDINATES --> proposer une cleanwalk*/
+router.post("/get-city-from-coordinates", async function (req, res, next) {
 
-  res.json({ result: true, response: response });
+  if (await tokenIsValidated(req.body.token)) {
+
+    let requete = request(
+      "GET",
+      `https://api-adresse.data.gouv.fr/reverse/?lon=${req.body.lonFromFront}&lat=${req.body.latFromFront}`
+    );
+    let response = JSON.parse(requete.body);
+    // console.log("réponse API: ", response);
+
+    res.json({ result: true, response: response });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
-/*search-city-only*/
-router.post("/search-city-only", function (req, res, next) {
-  let cityRegex = /arrondissement/i;
 
-  let requete = request(
-    "GET",
-    `https://api-adresse.data.gouv.fr/search/?q=${req.body.city}&type=municipality`
-  );
-  let response = JSON.parse(requete.body);
-  let newResponse = response.features.filter(
-    (obj) => !cityRegex.test(obj.properties.label)
-  );
-  newResponse = newResponse.map((obj) => {
-    let copy = { ...obj };
-    copy.properties.label = copy.properties.city;
-    return copy;
-  });
+/*SEARCH-CITY-ONLY*/
+router.post("/search-city-only", async function (req, res, next) {
 
-  res.json({ result: true, newResponse });
+  if (await tokenIsValidated(req.body.token)) {
+
+    let cityRegex = /arrondissement/i;
+    let requete = request(
+      "GET",
+      `https://api-adresse.data.gouv.fr/search/?q=${req.body.city}&type=municipality`
+    );
+    let response = JSON.parse(requete.body);
+    let newResponse = response.features.filter(
+      (obj) => !cityRegex.test(obj.properties.label)
+    );
+    // console.log("newResponse", newResponse);
+    newResponse = newResponse.map((obj) => {
+      let copy = { ...obj };
+      copy.properties.label = copy.properties.city;
+      return copy;
+    });
+
+    res.json({ result: true, newResponse });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
-// /load-cw-forstore
+
+/*LOAD-CW-FORSTORE*/
 router.get("/load-cw-forstore/:token", async function (req, res, next) {
   const token = req.params.token;
   //console.log('token load-cw-forstore', token);
@@ -424,11 +525,9 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
       { $match: { startingDate: { $gte: date } } },
     ]);
 
-    // Création du tableau d'objets des CW auquelles ils participent avec uniquement les ids des CW
+    // Création du tableau des CW auquelles ils participent avec uniquement les ids des CW
     const infosCWparticipate = cleanwalksParticipate.map((cleanwalk) => {
-      return {
-        id: cleanwalk._id,
-      };
+      return cleanwalk._id;
     });
 
     // récup des cleanwalks qu'organise le user
@@ -437,11 +536,9 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
       startingDate: { $gte: date },
     });
 
-    // Création du tableau d'objets des CW qu'ils organisent avec uniquement les ids des CW
+    // Création du tableau des CW qu'ils organisent avec uniquement les ids des CW
     const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
-      return {
-        id: cleanwalk._id,
-      };
+      return cleanwalk._id;
     });
 
     res.json({ result: true, infosCWparticipate, infosCWorganize });
