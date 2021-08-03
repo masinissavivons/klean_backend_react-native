@@ -44,14 +44,15 @@ router.post("/sign-up", async function (req, res, next) {
     error.push("Format d'email incorrect");
   }
 
-  let cityInfo = JSON.parse(req.body.cityInfo);
-  // console.log("cityInfo: ", cityInfo);
-  let code = cityInfo.properties.citycode;
-  let coordinates = cityInfo.geometry.coordinates;
-  let population = cityInfo.properties.population;
+
 
   // register
   if (error.length == 0 && idCleanwalk === undefined) {
+
+    let cityInfo = JSON.parse(req.body.cityInfo);
+    let code = cityInfo.properties.citycode;
+    let coordinates = cityInfo.geometry.coordinates;
+    let population = cityInfo.properties.population;
     let found = await cityModel.findOne({ cityCode: code });
 
     if (found) {
@@ -109,11 +110,16 @@ router.post("/sign-up", async function (req, res, next) {
       saveUser,
       token,
     });
-    return;
   }
 
   // register & participate
   else if (error.length == 0 && idCleanwalk !== undefined) {
+
+    let cityInfo = JSON.parse(req.body.cityInfo);
+    let code = cityInfo.properties.citycode;
+    let coordinates = cityInfo.geometry.coordinates;
+    let population = cityInfo.properties.population;
+
     let found = await cityModel.findOne({ cityCode: code });
 
     if (found) {
