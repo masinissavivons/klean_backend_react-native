@@ -237,6 +237,46 @@ router.get("/load-profil/:token", async function (req, res, next) {
 //   res.json({ result: true, cleanwalk });
 // });
 
+// unsubscribe to cleanwalk
+router.post("/unsubscribe-cw", async function (req, res, next) {
+
+  const token = req.body.token;
+  const idCW = req.body.idCW;
+  const user = await userModel.findOne({ token: token });
+
+  if (user) {
+
+    await cleanwalkModel.updateOne(
+      { _id: idCW },
+      { $pull: { participantsList: user._id } }
+    );
+
+    res.json({ result: true });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
+});
+
+// delete to cleanwalk
+router.delete("/delete-cw/:token/:idCW", async function (req, res, next) {
+
+  const token = req.params.token;
+  const idCW = req.params.idCW;
+
+  const user = await userModel.findOne({ token: token });
+
+  if (user) {
+
+    await cleanwalkModel.deleteOne(
+      { _id: idCW }
+    );
+
+    res.json({ result: true });
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
+});
+
 /*load message*/
 router.get("/load-messages/:token/:cwid", async function (req, res, next) {
   let cleanwalk = await cleanwalkModel.find({ _id: req.params.cwid });
@@ -421,11 +461,9 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
       { $match: { startingDate: { $gte: date } } },
     ]);
 
-    // Création du tableau d'objets des CW auquelles ils participent avec uniquement les ids des CW
+    // Création du tableau des CW auquelles ils participent avec uniquement les ids des CW
     const infosCWparticipate = cleanwalksParticipate.map((cleanwalk) => {
-      return {
-        id: cleanwalk._id,
-      };
+      return cleanwalk._id;
     });
 
     // récup des cleanwalks qu'organise le user
@@ -434,11 +472,9 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
       startingDate: { $gte: date },
     });
 
-    // Création du tableau d'objets des CW qu'ils organisent avec uniquement les ids des CW
+    // Création du tableau des CW qu'ils organisent avec uniquement les ids des CW
     const infosCWorganize = cleanwalksOrganize.map((cleanwalk) => {
-      return {
-        id: cleanwalk._id,
-      };
+      return cleanwalk._id;
     });
 
     res.json({ result: true, infosCWparticipate, infosCWorganize });
