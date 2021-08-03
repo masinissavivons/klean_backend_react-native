@@ -7,6 +7,13 @@ const uid2 = require("uid2");
 const cleanwalkModel = require("../models/cleanwalks");
 const cityModel = require("../models/cities");
 
+var cloudinary = require('cloudinary').v2;
+cloudinary.config({ 
+  cloud_name: 'dcjawpw4p', 
+  api_key: '525136121674624', 
+  api_secret: '5COH_MbcLYthbGTl4VxaH0xAUHo' 
+});
+
 function validateEmail(email) {
   const re =
     /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -62,6 +69,7 @@ router.post("/sign-up", async function (req, res, next) {
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
         city: found._id,
+        avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
         password: hash,
         token: uid2(32),
       });
@@ -92,6 +100,7 @@ router.post("/sign-up", async function (req, res, next) {
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
         city: citySaved._id,
+        avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
         password: hash,
         token: uid2(32),
       });
@@ -129,6 +138,7 @@ router.post("/sign-up", async function (req, res, next) {
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
         city: found._id,
+        avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
         password: hash,
         token: uid2(32),
       });
@@ -166,6 +176,7 @@ router.post("/sign-up", async function (req, res, next) {
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
         city: citySaved._id,
+        avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
         password: hash,
         token: uid2(32),
       });

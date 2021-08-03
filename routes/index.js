@@ -220,6 +220,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      avatarUrl: user.avatarUrl, 
     };
 
     //Statistiques personnelles
