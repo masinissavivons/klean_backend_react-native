@@ -305,7 +305,7 @@ router.post("/create-cw", async function (req, res, next) {
     res.json({ result, error, resultSaveCleanwalk, cleanwalkSave });
   }
 
-  if (error.length == 0 && found == null) {
+  else if (error.length == 0 && found == null) {
     let newCity = cityModel({
       cityName: cityInfo.cityName,
       cityCoordinates: {
