@@ -255,22 +255,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
   }
 });
 
-// subscribe to cleanwalk
-// router.post("/subscribe-cw", async function (req, res, next) {
-//   let cleanwalk = await cleanwalkModel.findOne({ _id: idCleanwalk });
-
-//   let idCleanwalk = req.body.cleanwalkIdFromFront;
-
-//   newParticipant = await cleanwalkModel.updateOne(
-//     { _id: idCleanwalk },
-//     { $push: { participantsList: saveUser._id } }
-//   );
-
-//   res.json({ result: true, cleanwalk });
-// });
-
-
-/*LOAD-MESSAGE*/
+/*LOAD MESSAGE*/
 router.get("/load-messages/:token/:cwid", async function (req, res, next) {
 
   if (await tokenIsValidated(req.params.token)) {
@@ -325,7 +310,6 @@ router.post("/create-cw", async function (req, res, next) {
   let resultSaveCity = false;
 
   let cityInfo = JSON.parse(req.body.city);
-  // console.log("cityInfo: ", cityInfo);
   let code = cityInfo.cityCode;
   let userToken = req.body.token;
   if (
@@ -342,6 +326,8 @@ router.post("/create-cw", async function (req, res, next) {
   let found = await cityModel.findOne({ cityCode: code });
 
   if (error.length == 0 && found) {
+    let splitedTool = req.body.tool.split(",");
+
     var addCW = new cleanwalkModel({
       cleanwalkTitle: req.body.title,
       cleanwalkDescription: req.body.description,
@@ -352,7 +338,7 @@ router.post("/create-cw", async function (req, res, next) {
       },
       startingDate: req.body.startingDate,
       endingDate: req.body.endingDate,
-      toolBadge: req.body.tool,
+      toolBadge: splitedTool,
       admin: user._id,
     });
 
@@ -361,12 +347,10 @@ router.post("/create-cw", async function (req, res, next) {
     resultSaveCleanwalk = true;
     result = true;
 
-    console.log("error back: ", error);
-
     res.json({ result, error, resultSaveCleanwalk, cleanwalkSave });
   }
 
-  if (error.length == 0 && found == null) {
+  else if (error.length == 0 && found == null) {
     let newCity = cityModel({
       cityName: cityInfo.cityName,
       cityCoordinates: {
@@ -380,6 +364,8 @@ router.post("/create-cw", async function (req, res, next) {
     let citySaved = await newCity.save();
 
     if (citySaved) {
+      let splitedTool = req.body.tool.split(",");
+
       var addCW = new cleanwalkModel({
         cleanwalkTitle: req.body.title,
         cleanwalkDescription: req.body.description,
@@ -390,7 +376,7 @@ router.post("/create-cw", async function (req, res, next) {
         },
         startingDate: req.body.startingDate,
         endingDate: req.body.endingDate,
-        toolBadge: req.body.tool,
+        toolBadge: splitedTool,
         admin: user._id,
       });
 
@@ -410,6 +396,25 @@ router.post("/create-cw", async function (req, res, next) {
   }
 
   res.json({ result, error });
+});
+
+
+// subscribe to cleanwalk
+router.post("/subscribe-cw", async function (req, res, next) {
+  let error = [];
+  let user = await userModel.findOne({ token: req.body.token });
+
+  newParticipant = await cleanwalkModel.updateOne(
+    { _id: req.body.cleanwalkID },
+    { $push: { participantsList: user._id } }
+  );
+
+  if (newParticipant.n == 1) {
+    res.json({ result: true });
+  } else {
+    error.push("Erreur, veuillez réessayer.")
+    res.json({ result: false, error });
+  }
 });
 
 /*GET-CITY-FROM-COORDINATES --> proposer une cleanwalk*/
