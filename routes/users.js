@@ -44,11 +44,8 @@ router.post("/sign-up", async function (req, res, next) {
     error.push("Format d'email incorrect");
   }
 
-
-
   // register
   if (error.length == 0 && idCleanwalk === undefined) {
-
     let cityInfo = JSON.parse(req.body.cityInfo);
     let code = cityInfo.properties.citycode;
     let coordinates = cityInfo.geometry.coordinates;
@@ -114,7 +111,6 @@ router.post("/sign-up", async function (req, res, next) {
 
   // register & participate
   else if (error.length == 0 && idCleanwalk !== undefined) {
-
     let cityInfo = JSON.parse(req.body.cityInfo);
     let code = cityInfo.properties.citycode;
     let coordinates = cityInfo.geometry.coordinates;
@@ -263,6 +259,30 @@ router.post("/sign-in", async function (req, res, next) {
     return;
   }
   res.json({ error, result });
+});
+
+// update password
+router.put("/update-password", async function (req, res, next) {
+  let result = false;
+  let newPassword = null;
+  let error = [];
+  let password = req.body.hold;
+  let user = await userModel.findOne({ token: req.body.token });
+  
+  if (bcrypt.compareSync(password, user.password) && req.body.new === req.body.confirmNewPass) {
+    let hash = bcrypt.hashSync(req.body.confirmNewPass, 10);
+    newPassword = await userModel.updateOne(
+      { token: user.token },
+      { password: hash }
+    );
+    if (newPassword != null) {
+      res.json({ result: true, user });
+    }
+
+  } else if (req.body.new !== req.body.confirmNewPass) {
+    error.push("Les champs du nouveau mot de passe ne sont pas identiques.");
+    res.json({ result: false, error });
+  }
 });
 
 module.exports = router;
