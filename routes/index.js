@@ -363,7 +363,7 @@ router.post("/subscribe-cw", async function (req, res, next) {
     { $push: { participantsList: user._id } }
   );
 
-  if (newParticipant.n == 0) {
+  if (newParticipant.n == 1) {
     res.json({ result: true });
   } else {
     error.push("Erreur, veuillez réessayer.")
