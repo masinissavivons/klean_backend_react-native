@@ -158,7 +158,7 @@ router.get('/gen-fake-data', async function (req, res, next) {
       email: (randfn + randln + rand(0, 2000) + "@gmail.com").toLowerCase(),
       password: bcrypt.hashSync("cleanwalk", 10),
       city: requeteCity[rand(0, requeteCity.length - 1)]["_id"],
-      avatarUrl: "",
+      avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
       token: uid2(32),
     });
 
