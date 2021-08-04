@@ -391,6 +391,7 @@ router.post("/create-cw", async function (req, res, next) {
 
   if (error.length == 0 && found) {
     let splitedTool = req.body.tool.split(",");
+    splitedTool.forEach(str => str.replace(/ /g, ""));
 
     var addCW = new cleanwalkModel({
       cleanwalkTitle: req.body.title,
