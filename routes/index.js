@@ -373,8 +373,6 @@ router.post("/create-cw", async function (req, res, next) {
 
 
   let cityInfo = JSON.parse(req.body.city);
-  console.log("info: ", cityInfo);
-  console.log("cleanwalkCoordinates: ", cityInfo.cleanwalkCoordinates.lat);
 
   let code = cityInfo.cityCode;
   let userToken = req.body.token;
@@ -394,7 +392,7 @@ router.post("/create-cw", async function (req, res, next) {
   if (error.length == 0 && found) {
     let splitedTool = req.body.tool.split(",");
     splitedTool = splitedTool.map(str => str.replace(/ /g, "").replace(/\n/g, ""));
-    console.log({ splitedTool })
+    //console.log({ splitedTool })
 
     var addCW = new cleanwalkModel({
       cleanwalkTitle: req.body.title,
@@ -434,7 +432,7 @@ router.post("/create-cw", async function (req, res, next) {
     if (citySaved) {
       let splitedTool = req.body.tool.split(",");
       splitedTool = splitedTool.map(str => str.replace(/ /g, "").replace(/\n/g, ""));
-      console.log({ splitedTool })
+      //console.log({ splitedTool })
 
       var addCW = new cleanwalkModel({
         cleanwalkTitle: req.body.title,
