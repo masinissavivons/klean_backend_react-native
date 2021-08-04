@@ -1,11 +1,19 @@
 var express = require("express");
 var router = express.Router();
+var uniqid = require('uniqid');
+var fs = require('fs');
 var request = require("sync-request");
-const cityModel = require("../models/cities");
 
+const cityModel = require("../models/cities");
 let cleanwalkModel = require("../models/cleanwalks");
 let userModel = require("../models/users");
 
+var cloudinary = require("cloudinary").v2;
+cloudinary.config({
+  cloud_name: "dcjawpw4p",
+  api_key: "525136121674624",
+  api_secret: "5COH_MbcLYthbGTl4VxaH0xAUHo",
+});
 
 async function tokenIsValidated(token) {
 
@@ -573,6 +581,42 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
   } else {
     res.json({ result: false, error: "user not found" });
   }
+});
+
+//UPLOAD-PHOTO
+router.post("/upload-photo/:token", async function (req, res, next) {
+  let result = true;
+  let error = [];
+  let resultCloudinary;
+  let pictureName = './tmp/'+uniqid()+'.jpg';
+  let resultCopy = await req.files.avatar.mv(pictureName);
+
+  if(!resultCopy) {
+    let resultCloudinary = await cloudinary.uploader.upload(pictureName, 
+      {public_id: "Klean/" + uniqid()},
+      function(error, result)
+      {console.log(result, error); });
+
+      if(resultCloudinary) {
+        let user = await userModel.findOne({token: req.params.token})
+        user.avatarUrl = resultCloudinary.secure_url
+        userSaved = await user.save()
+        if (!userSaved) {
+          result = false
+          error.push('Failed to save user in DB')
+        }
+      } else {
+        result = false
+        error.push('failed to save picture in cloud')
+      }
+
+  } else {
+    result = false
+    error.push('failed to upload file in backend')
+  }
+
+  res.json({result, resultCloudinary, resultCopy, error});
+  fs.unlinkSync(pictureName);
 });
 
 module.exports = router;
