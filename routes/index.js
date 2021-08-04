@@ -151,7 +151,7 @@ router.get("/load-cities-ranking", async function (req, res, next) {
   let cityArr = await cityModel.find()
 
   for (let i=0; i < cityArr.length; i++) {
-    if (cwpercity.some(obj => obj["_id"] === cityArr[i]["_id"])) {
+    if (cwpercity.some(obj => obj["_id"].toString() === cityArr[i]["_id"].toString())) {
     } else {
       cwpercity.push({_id: cityArr[i]["_id"], count: 0, city_info: [cityArr[i]]})
     }
