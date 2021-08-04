@@ -369,8 +369,11 @@ router.post("/create-cw", async function (req, res, next) {
   var result = false;
   let resultSaveCleanwalk = false;
   let resultSaveCity = false;
+  
 
   let cityInfo = JSON.parse(req.body.city);
+  console.log("cityInfo: ", cityInfo.cleanwalkCoordinates);
+
   let code = cityInfo.cityCode;
   let userToken = req.body.token;
   if (
@@ -394,8 +397,8 @@ router.post("/create-cw", async function (req, res, next) {
       cleanwalkDescription: req.body.description,
       cleanwalkCity: found._id,
       cleanwalkCoordinates: {
-        longitude: cityInfo.cityCoordinates[0],
-        latitude: cityInfo.cityCoordinates[1],
+        longitude: cityInfo.cleanwalkCoordinates[0],
+        latitude: cityInfo.cleanwalkCoordinates[1],
       },
       startingDate: req.body.startingDate,
       endingDate: req.body.endingDate,

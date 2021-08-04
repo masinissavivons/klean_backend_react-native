@@ -200,10 +200,6 @@ router.post("/sign-up", async function (req, res, next) {
     });
     return;
   }
-  res.json({
-    error,
-    result,
-  });
 });
 
 //    POST Sign-in    //
