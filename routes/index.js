@@ -147,6 +147,7 @@ router.get("/load-cities-ranking", async function (req, res, next) {
     },
   ]);
 
+
   //ajout des villes sans CW (0 points)
   let cityArr = await cityModel.find()
 
