@@ -146,8 +146,18 @@ router.get("/load-cities-ranking", async function (req, res, next) {
       },
     },
   ]);
-  console.log(cwpercity[1]["city_info"]);
 
+
+  //ajout des villes sans CW (0 points)
+  let cityArr = await cityModel.find()
+
+  for (let i=0; i < cityArr.length; i++) {
+    if (cwpercity.some(obj => obj["_id"].toString() === cityArr[i]["_id"].toString())) {
+    } else {
+      cwpercity.push({_id: cityArr[i]["_id"], count: 0, city_info: [cityArr[i]]})
+    }
+
+  }
 
   let token = req.query.token;
   let user = await userModel.find({ token: token });
@@ -243,6 +253,16 @@ router.get("/load-profil/:token", async function (req, res, next) {
       },
       { $match: { _id: user.city } },
     ]);
+
+    //s'il n'y a pas encore de CW organisées dans la ville, pour remonter ses stats à 0
+    if (cwpercity.length === 0) {
+      userCity = await cityModel.findById(user.city)
+      cwpercity = [{
+        _id: user.city,
+        points: 0,
+        city_info: [userCity]
+      }]
+    }
 
     res.json({
       result: true,
@@ -353,7 +373,8 @@ router.post("/create-cw", async function (req, res, next) {
   
 
   let cityInfo = JSON.parse(req.body.city);
-  console.log("cityInfo: ", cityInfo.cleanwalkCoordinates);
+  console.log("info: ", cityInfo);
+  console.log("cleanwalkCoordinates: ", cityInfo.cleanwalkCoordinates.lat);
 
   let code = cityInfo.cityCode;
   let userToken = req.body.token;
@@ -378,8 +399,8 @@ router.post("/create-cw", async function (req, res, next) {
       cleanwalkDescription: req.body.description,
       cleanwalkCity: found._id,
       cleanwalkCoordinates: {
-        longitude: cityInfo.cleanwalkCoordinates[0],
-        latitude: cityInfo.cleanwalkCoordinates[1],
+        longitude: cityInfo.cleanwalkCoordinates.lon,
+        latitude: cityInfo.cleanwalkCoordinates.lat,
       },
       startingDate: req.body.startingDate,
       endingDate: req.body.endingDate,
@@ -439,8 +460,6 @@ router.post("/create-cw", async function (req, res, next) {
       resultSaveCity,
     });
   }
-
-  res.json({ result, error });
 });
 
 
