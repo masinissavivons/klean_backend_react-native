@@ -64,7 +64,7 @@ router.post("/sign-up", async function (req, res, next) {
       let newUser = new userModel({
         firstName: req.body.firstNameFromFront,
         lastName: req.body.lastNameFromFront,
-        email: req.body.emailFromFront,
+        email: req.body.emailFromFront.toLowerCase(),
         city: found._id,
         avatarUrl:
           "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
@@ -94,7 +94,7 @@ router.post("/sign-up", async function (req, res, next) {
       let newUser = new userModel({
         firstName: req.body.firstNameFromFront,
         lastName: req.body.lastNameFromFront,
-        email: req.body.emailFromFront,
+        email: req.body.emailFromFront.toLowerCase(),
         city: citySaved._id,
         avatarUrl:
           "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
@@ -132,7 +132,7 @@ router.post("/sign-up", async function (req, res, next) {
       let newUser = new userModel({
         firstName: req.body.firstNameFromFront,
         lastName: req.body.lastNameFromFront,
-        email: req.body.emailFromFront,
+        email: req.body.emailFromFront.toLowerCase(),
         city: found._id,
         avatarUrl:
           "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
@@ -169,7 +169,7 @@ router.post("/sign-up", async function (req, res, next) {
       let newUser = new userModel({
         firstName: req.body.firstNameFromFront,
         lastName: req.body.lastNameFromFront,
-        email: req.body.emailFromFront,
+        email: req.body.emailFromFront.toLowerCase(),
         city: citySaved._id,
         avatarUrl:
           "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
@@ -221,7 +221,7 @@ router.post("/sign-in", async function (req, res, next) {
   // sign-in
   if (error.length == 0 && idCleanwalk === undefined) {
     user = await userModel.findOne({
-      email: req.body.emailFromFront,
+      email: req.body.emailFromFront.toLowerCase(),
     });
 
     if (user) {
@@ -242,7 +242,7 @@ router.post("/sign-in", async function (req, res, next) {
   // sign-in & participate
   else if (error.length == 0 && idCleanwalk !== undefined) {
     user = await userModel.findOne({
-    email: req.body.emailFromFront,
+    email: req.body.emailFromFront.toLowerCase(),
     });
 
     if (user) {
