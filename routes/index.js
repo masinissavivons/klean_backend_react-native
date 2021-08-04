@@ -372,7 +372,8 @@ router.post("/create-cw", async function (req, res, next) {
   
 
   let cityInfo = JSON.parse(req.body.city);
-  console.log("cityInfo: ", cityInfo.cleanwalkCoordinates);
+  console.log("info: ", cityInfo);
+  console.log("cleanwalkCoordinates: ", cityInfo.cleanwalkCoordinates.lat);
 
   let code = cityInfo.cityCode;
   let userToken = req.body.token;
@@ -398,8 +399,8 @@ router.post("/create-cw", async function (req, res, next) {
       cleanwalkDescription: req.body.description,
       cleanwalkCity: found._id,
       cleanwalkCoordinates: {
-        longitude: cityInfo.cleanwalkCoordinates[0],
-        latitude: cityInfo.cleanwalkCoordinates[1],
+        longitude: cityInfo.cleanwalkCoordinates.lon,
+        latitude: cityInfo.cleanwalkCoordinates.lat,
       },
       startingDate: req.body.startingDate,
       endingDate: req.body.endingDate,
@@ -459,8 +460,6 @@ router.post("/create-cw", async function (req, res, next) {
       resultSaveCity,
     });
   }
-
-  res.json({ result, error });
 });
 
 
