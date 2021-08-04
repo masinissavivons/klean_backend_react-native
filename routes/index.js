@@ -146,7 +146,8 @@ router.get("/load-cities-ranking", async function (req, res, next) {
       },
     },
   ]);
-  console.log(cwpercity);
+  console.log(cwpercity[1]["city_info"]);
+
 
   let token = req.query.token;
   let user = await userModel.find({ token: token });
