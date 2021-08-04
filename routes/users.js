@@ -7,11 +7,11 @@ const uid2 = require("uid2");
 const cleanwalkModel = require("../models/cleanwalks");
 const cityModel = require("../models/cities");
 
-var cloudinary = require('cloudinary').v2;
-cloudinary.config({ 
-  cloud_name: 'dcjawpw4p', 
-  api_key: '525136121674624', 
-  api_secret: '5COH_MbcLYthbGTl4VxaH0xAUHo' 
+var cloudinary = require("cloudinary").v2;
+cloudinary.config({
+  cloud_name: "dcjawpw4p",
+  api_key: "525136121674624",
+  api_secret: "5COH_MbcLYthbGTl4VxaH0xAUHo",
 });
 
 function validateEmail(email) {
@@ -66,7 +66,8 @@ router.post("/sign-up", async function (req, res, next) {
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
         city: found._id,
-        avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
+        avatarUrl:
+          "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
         password: hash,
         token: uid2(32),
       });
@@ -77,9 +78,7 @@ router.post("/sign-up", async function (req, res, next) {
         result = true;
         token = saveUser.token;
       }
-    }
-
-    if (found == null) {
+    } else if (found == null) {
       let newCity = new cityModel({
         cityName: req.body.cityFromFront,
         cityCoordinates: {
@@ -97,7 +96,8 @@ router.post("/sign-up", async function (req, res, next) {
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
         city: citySaved._id,
-        avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
+        avatarUrl:
+          "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
         password: hash,
         token: uid2(32),
       });
@@ -134,7 +134,8 @@ router.post("/sign-up", async function (req, res, next) {
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
         city: found._id,
-        avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
+        avatarUrl:
+          "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
         password: hash,
         token: uid2(32),
       });
@@ -152,9 +153,7 @@ router.post("/sign-up", async function (req, res, next) {
         result = true;
         token = saveUser.token;
       }
-    }
-
-    if (found == null) {
+    } else if (found == null) {
       let newCity = new cityModel({
         cityName: req.body.cityFromFront,
         cityCoordinates: {
@@ -172,7 +171,8 @@ router.post("/sign-up", async function (req, res, next) {
         lastName: req.body.lastNameFromFront,
         email: req.body.emailFromFront,
         city: citySaved._id,
-        avatarUrl: "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
+        avatarUrl:
+          "https://res.cloudinary.com/dcjawpw4p/image/upload/v1627998899/Klean/userblank_k9xp57.png",
         password: hash,
         token: uid2(32),
       });
@@ -198,7 +198,9 @@ router.post("/sign-up", async function (req, res, next) {
       token,
       newParticipant,
     });
-    return;
+  }
+  else{
+    res.json({ error, result });
   }
 });
 
@@ -206,7 +208,7 @@ router.post("/sign-up", async function (req, res, next) {
 router.post("/sign-in", async function (req, res, next) {
   let error = [];
   let result = false;
-  let user = "";
+  let user = null;
   let token = null;
 
   let idCleanwalk = req.body.cleanwalkIdFromFront;
@@ -217,7 +219,7 @@ router.post("/sign-in", async function (req, res, next) {
   }
 
   // sign-in
-  if (error.length == 0) {
+  if (error.length == 0 && idCleanwalk === undefined) {
     user = await userModel.findOne({
       email: req.body.emailFromFront,
     });
@@ -230,17 +232,17 @@ router.post("/sign-in", async function (req, res, next) {
         result = false;
         error.push("Mot de passe incorrect.");
       }
-    } else {
-      error.push("Email incorrect.");
+    } else if (user == null) {
+      error.push("Vous ne vous êtes pas encore enregistré.");
     }
+
     res.json({ error, result, user, token });
-    return;
   }
 
   // sign-in & participate
   else if (error.length == 0 && idCleanwalk !== undefined) {
     user = await userModel.findOne({
-      email: req.body.emailFromFront,
+    email: req.body.emailFromFront,
     });
 
     if (user) {
@@ -258,37 +260,43 @@ router.post("/sign-in", async function (req, res, next) {
         result = false;
         error.push("Mot de passe incorrect.");
       }
-    } else {
-      error.push("Email incorrect.");
+    } else if (user == null){
+      error.push("Vous ne vous êtes pas encore enregistré.");
     }
-
     res.json({ error, result, user, token, newParticipant });
-    return;
   }
-  res.json({ error, result });
+  else{
+    res.json({ error, result });
+  }
 });
 
-// update password
+
+// PUT update password
 router.put("/update-password", async function (req, res, next) {
   let result = false;
   let newPassword = null;
   let error = [];
   let password = req.body.hold;
   let user = await userModel.findOne({ token: req.body.token });
-  
-  if (bcrypt.compareSync(password, user.password) && req.body.new === req.body.confirmNewPass) {
+
+  if (bcrypt.compareSync(password, user.password) &&req.body.new === req.body.confirmNewPass) {
     let hash = bcrypt.hashSync(req.body.confirmNewPass, 10);
     newPassword = await userModel.updateOne(
       { token: user.token },
       { password: hash }
     );
     if (newPassword != null) {
-      res.json({ result: true, user });
+      result = true;
     }
+    res.json({ result, user });
 
   } else if (req.body.new !== req.body.confirmNewPass) {
     error.push("Les champs du nouveau mot de passe ne sont pas identiques.");
-    res.json({ result: false, error });
+    result = false,
+    res.json({ result, error });
+  }
+  else {
+    res.json({ result, error });
   }
 });
 
