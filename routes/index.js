@@ -146,7 +146,17 @@ router.get("/load-cities-ranking", async function (req, res, next) {
       },
     },
   ]);
-  console.log(cwpercity);
+
+  //ajout des villes sans CW (0 points)
+  let cityArr = await cityModel.find()
+
+  for (let i=0; i < cityArr.length; i++) {
+    if (cwpercity.some(obj => obj["_id"] === cityArr[i]["_id"])) {
+    } else {
+      cwpercity.push({_id: cityArr[i]["_id"], count: 0, city_info: [cityArr[i]]})
+    }
+
+  }
 
   let token = req.query.token;
   let user = await userModel.find({ token: token });
@@ -242,6 +252,16 @@ router.get("/load-profil/:token", async function (req, res, next) {
       },
       { $match: { _id: user.city } },
     ]);
+
+    //s'il n'y a pas encore de CW organisées dans la ville, pour remonter ses stats à 0
+    if (cwpercity.length === 0) {
+      userCity = await cityModel.findById(user.city)
+      cwpercity = [{
+        _id: user.city,
+        points: 0,
+        city_info: [userCity]
+      }]
+    }
 
     res.json({
       result: true,
