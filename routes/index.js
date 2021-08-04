@@ -147,13 +147,14 @@ router.get("/load-cities-ranking", async function (req, res, next) {
     },
   ]);
 
+
   //ajout des villes sans CW (0 points)
   let cityArr = await cityModel.find()
 
-  for (let i=0; i < cityArr.length; i++) {
+  for (let i = 0; i < cityArr.length; i++) {
     if (cwpercity.some(obj => obj["_id"].toString() === cityArr[i]["_id"].toString())) {
     } else {
-      cwpercity.push({_id: cityArr[i]["_id"], count: 0, city_info: [cityArr[i]]})
+      cwpercity.push({ _id: cityArr[i]["_id"], count: 0, city_info: [cityArr[i]] })
     }
 
   }
@@ -230,7 +231,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      avatarUrl: user.avatarUrl, 
+      avatarUrl: user.avatarUrl,
     };
 
     //Statistiques personnelles
@@ -369,7 +370,7 @@ router.post("/create-cw", async function (req, res, next) {
   var result = false;
   let resultSaveCleanwalk = false;
   let resultSaveCity = false;
-  
+
 
   let cityInfo = JSON.parse(req.body.city);
   console.log("info: ", cityInfo);
@@ -392,6 +393,8 @@ router.post("/create-cw", async function (req, res, next) {
 
   if (error.length == 0 && found) {
     let splitedTool = req.body.tool.split(",");
+    splitedTool = splitedTool.map(str => str.replace(/ /g, "").replace(/\n/g, ""));
+    console.log({ splitedTool })
 
     var addCW = new cleanwalkModel({
       cleanwalkTitle: req.body.title,
@@ -430,6 +433,8 @@ router.post("/create-cw", async function (req, res, next) {
 
     if (citySaved) {
       let splitedTool = req.body.tool.split(",");
+      splitedTool = splitedTool.map(str => str.replace(/ /g, "").replace(/\n/g, ""));
+      console.log({ splitedTool })
 
       var addCW = new cleanwalkModel({
         cleanwalkTitle: req.body.title,
