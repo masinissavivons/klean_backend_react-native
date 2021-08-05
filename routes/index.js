@@ -583,20 +583,21 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
 
 //UPLOAD-PHOTO
 router.post("/upload-photo/:token", async function (req, res, next) {
-  let result = true;
-  let error = [];
-  let resultCloudinary;
-  let pictureName = './tmp/'+uniqid()+'.jpg';
-  let resultCopy = await req.files.avatar.mv(pictureName);
 
-  if(!resultCopy) {
-    resultCloudinary = await cloudinary.uploader.upload(pictureName, 
-      {public_id: "Klean/" + uniqid()},
-      function(error, result)
-      {console.log(result, error); });
+  if (await tokenIsValidated(req.params.token)) {
+    let result = true;
+    let error = [];
+    let resultCloudinary;
+    let pictureName = './tmp/' + uniqid() + '.jpg';
+    let resultCopy = await req.files.avatar.mv(pictureName);
 
-      if(resultCloudinary) {
-        let user = await userModel.findOne({token: req.params.token})
+    if (!resultCopy) {
+      resultCloudinary = await cloudinary.uploader.upload(pictureName,
+        { public_id: "Klean/" + uniqid() },
+        function (error, result) { console.log(result, error); });
+
+      if (resultCloudinary) {
+        let user = await userModel.findOne({ token: req.params.token })
         user.avatarUrl = resultCloudinary.secure_url
         userSaved = await user.save()
         if (!userSaved) {
@@ -608,13 +609,17 @@ router.post("/upload-photo/:token", async function (req, res, next) {
         error.push('failed to save picture in cloud')
       }
 
-  } else {
-    result = false
-    error.push('failed to upload file in backend')
-  }
+    } else {
+      result = false
+      error.push('failed to upload file in backend')
+    }
 
-  res.json({result, resultCloudinary, resultCopy, error});
-  fs.unlinkSync(pictureName);
+    res.json({ result, resultCloudinary, resultCopy, error });
+    fs.unlinkSync(pictureName);
+    
+  } else {
+    res.json({ result: false, error: "user not found" });
+  }
 });
 
 module.exports = router;
