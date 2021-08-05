@@ -468,6 +468,7 @@ router.post("/create-cw", async function (req, res, next) {
       error,
       resultSaveCleanwalk,
       resultSaveCity,
+      cleanwalkSave
     });
   }
 });
