@@ -592,7 +592,7 @@ router.post("/upload-photo/:token", async function (req, res, next) {
   let resultCopy = await req.files.avatar.mv(pictureName);
 
   if(!resultCopy) {
-    let resultCloudinary = await cloudinary.uploader.upload(pictureName, 
+    resultCloudinary = await cloudinary.uploader.upload(pictureName, 
       {public_id: "Klean/" + uniqid()},
       function(error, result)
       {console.log(result, error); });
