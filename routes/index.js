@@ -20,7 +20,7 @@ async function tokenIsValidated(token) {
   let userRequest = await userModel.find()
   let userTokenArr = userRequest.map(obj => obj.token)
 
-  //j'ajoute le token invité
+  // adding invited token
   userTokenArr.push("XeDLDMr3U4HSJSl74HJpKD")
 
   if (userTokenArr.every(str => str !== token)) {
@@ -31,7 +31,7 @@ async function tokenIsValidated(token) {
 }
 
 
-/*AUTOCOMPLETE-SEARCH*/
+//    autocomplete search   //
 router.post("/autocomplete-search", async function (req, res, next) {
 
   if (await tokenIsValidated(req.body.token)) {
@@ -48,7 +48,7 @@ router.post("/autocomplete-search", async function (req, res, next) {
 });
 
 
-/*AUTOCOMPLETE-SEARCH-CITY-ONLY*/
+//    autocomplete search city only   //
 router.post("/autocomplete-search-city-only", async function (req, res, next) {
 
   if (await tokenIsValidated(req.body.token)) {
@@ -61,7 +61,6 @@ router.post("/autocomplete-search-city-only", async function (req, res, next) {
     let newResponse = response.features.filter(
       (obj) => !cityRegex.test(obj.properties.label)
     );
-    // console.log("newResponse", newResponse);
     newResponse = newResponse.map((obj) => {
       let copy = { ...obj };
       copy.properties.label = copy.properties.city;
@@ -75,7 +74,7 @@ router.post("/autocomplete-search-city-only", async function (req, res, next) {
 });
 
 
-/*LOAD-CLEANWALK*/
+//    load cleanwalk    //
 router.get("/load-cleanwalk/:idCW/:token", async function (req, res, next) {
   if (await tokenIsValidated(req.params.token)) {
     var cleanwalk = await cleanwalkModel
@@ -92,7 +91,7 @@ router.get("/load-cleanwalk/:idCW/:token", async function (req, res, next) {
 });
 
 
-/*LOAD-PIN-ON-CHANGE-REGION*/
+//    load pin on change region   //
 router.post("/load-pin-on-change-region", async function (req, res, next) {
 
   if (await tokenIsValidated(req.body.token)) {
@@ -138,7 +137,7 @@ router.post("/load-pin-on-change-region", async function (req, res, next) {
 });
 
 
-/*LOAD-CITIES-RANKING*/
+//    load cities ranking   //
 router.get("/load-cities-ranking", async function (req, res, next) {
   let pointsPerCw = 5;
 
@@ -191,7 +190,8 @@ router.get("/load-cities-ranking", async function (req, res, next) {
   }
 });
 
-/*LOAD-PROFIL*/
+
+//    load profil   //
 router.get("/load-profil/:token", async function (req, res, next) {
   const token = req.params.token;
   const date = new Date();
@@ -210,7 +210,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
       { $match: { startingDate: { $gte: date } } },
     ]);
 
-    // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos qu'on a besoin
+    // Création du tableau d'objets des CW auquelles ils participent avec uniquement les infos dont a besoin
     const infosCWparticipate = cleanwalksParticipate.map((cleanwalk) => {
       return {
         id: cleanwalk._id,
@@ -285,6 +285,7 @@ router.get("/load-profil/:token", async function (req, res, next) {
   }
 });
 
+
 // unsubscribe to cleanwalk
 router.post("/unsubscribe-cw", async function (req, res, next) {
 
@@ -305,7 +306,8 @@ router.post("/unsubscribe-cw", async function (req, res, next) {
   }
 });
 
-// delete to cleanwalk
+
+// delete cleanwalk
 router.delete("/delete-cw/:token/:idCW", async function (req, res, next) {
 
   const token = req.params.token;
@@ -325,7 +327,7 @@ router.delete("/delete-cw/:token/:idCW", async function (req, res, next) {
   }
 });
 
-/*LOAD MESSAGE*/
+// load messages //
 router.get("/load-messages/:token/:cwid", async function (req, res, next) {
 
   if (await tokenIsValidated(req.params.token)) {
@@ -340,7 +342,7 @@ router.get("/load-messages/:token/:cwid", async function (req, res, next) {
 });
 
 
-/*SAVE-MESSAGE*/
+//    save messages    //
 router.post("/save-message", async function (req, res, next) {
 
   if (await tokenIsValidated(req.body.token)) {
@@ -372,7 +374,8 @@ router.post("/save-message", async function (req, res, next) {
   }
 });
 
-/*CREATE-CW*/
+
+//    create cleanwalk   //
 router.post("/create-cw", async function (req, res, next) {
   let error = [];
   var result = false;
@@ -400,7 +403,6 @@ router.post("/create-cw", async function (req, res, next) {
   if (error.length == 0 && found) {
     let splitedTool = req.body.tool.split(",");
     splitedTool = splitedTool.map(str => str.replace(/ /g, "").replace(/\n/g, ""));
-    //console.log({ splitedTool })
 
     var addCW = new cleanwalkModel({
       cleanwalkTitle: req.body.title,
@@ -440,7 +442,6 @@ router.post("/create-cw", async function (req, res, next) {
     if (citySaved) {
       let splitedTool = req.body.tool.split(",");
       splitedTool = splitedTool.map(str => str.replace(/ /g, "").replace(/\n/g, ""));
-      //console.log({ splitedTool })
 
       var addCW = new cleanwalkModel({
         cleanwalkTitle: req.body.title,
@@ -474,7 +475,7 @@ router.post("/create-cw", async function (req, res, next) {
 });
 
 
-// subscribe to cleanwalk
+//    subscribe to cleanwalk    //
 router.post("/subscribe-cw", async function (req, res, next) {
   let error = [];
   let user = await userModel.findOne({ token: req.body.token });
@@ -492,7 +493,7 @@ router.post("/subscribe-cw", async function (req, res, next) {
   }
 });
 
-/*GET-CITY-FROM-COORDINATES --> proposer une cleanwalk*/
+//    create cleanwalk    //
 router.post("/get-city-from-coordinates", async function (req, res, next) {
 
   if (await tokenIsValidated(req.body.token)) {
@@ -502,7 +503,6 @@ router.post("/get-city-from-coordinates", async function (req, res, next) {
       `https://api-adresse.data.gouv.fr/reverse/?lon=${req.body.lonFromFront}&lat=${req.body.latFromFront}`
     );
     let response = JSON.parse(requete.body);
-    // console.log("réponse API: ", response);
 
     res.json({ result: true, response: response });
   } else {
@@ -511,7 +511,7 @@ router.post("/get-city-from-coordinates", async function (req, res, next) {
 });
 
 
-/*SEARCH-CITY-ONLY*/
+//    search-city only    //
 router.post("/search-city-only", async function (req, res, next) {
 
   if (await tokenIsValidated(req.body.token)) {
@@ -525,7 +525,6 @@ router.post("/search-city-only", async function (req, res, next) {
     let newResponse = response.features.filter(
       (obj) => !cityRegex.test(obj.properties.label)
     );
-    // console.log("newResponse", newResponse);
     newResponse = newResponse.map((obj) => {
       let copy = { ...obj };
       copy.properties.label = copy.properties.city;
@@ -539,10 +538,9 @@ router.post("/search-city-only", async function (req, res, next) {
 });
 
 
-/*LOAD-CW-FORSTORE*/
+//    load cleanwalks   //
 router.get("/load-cw-forstore/:token", async function (req, res, next) {
   const token = req.params.token;
-  //console.log('token load-cw-forstore', token);
 
   const date = new Date();
   const user = await userModel.findOne({ token: token });
@@ -552,8 +550,8 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
 
     // unwind éclate le tableau 'participantsList' dans l'objet cleanwalk, il fait autant d'objet qu'il y a d'élément dans le tableau
     // cela devient une clé 'participantsList' de l'objet cleanwalk
-    // on fait ensuite un match pour ne garder que ceux qui ont comme valeur l'id de l'user
-    // puis on fait un match avec la date du jour avec une query pour afficher que celles qui ne sont pas dépassées
+    // on fait ensuite un match pour ne garder que ceux qui ont comme valeur l'id du user
+    // puis on fait un match avec la date du jour avec une query pour n'afficher que celles qui ne sont pas dépassées
     const cleanwalksParticipate = await cleanwalkModel.aggregate([
       { $unwind: "$participantsList" },
       { $match: { participantsList: userId } },
@@ -582,7 +580,7 @@ router.get("/load-cw-forstore/:token", async function (req, res, next) {
   }
 });
 
-//UPLOAD-PHOTO
+//    upload picture    //
 router.post("/upload-photo/:token", async function (req, res, next) {
 
   if (await tokenIsValidated(req.params.token)) {

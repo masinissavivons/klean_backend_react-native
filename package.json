@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "jest ./routes --forceExit --coverage"
+    "test": "jest ./routes --forceExit --coverage --watchAll --detectOpenHandles"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

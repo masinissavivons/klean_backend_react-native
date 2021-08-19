@@ -28,6 +28,7 @@ router.post("/sign-up", async function (req, res, next) {
   let token = null;
   let idCleanwalk = req.body.cleanwalkIdFromFront;
   let newParticipant = null;
+  let tokenInvited = req.body.token;
 
   let data = await userModel.findOne({
     email: req.body.emailFromFront,
@@ -48,7 +49,11 @@ router.post("/sign-up", async function (req, res, next) {
   }
 
   if (!validateEmail(req.body.emailFromFront)) {
-    error.push("Format d'email incorrect");
+    error.push("Format d'email incorrect.");
+  }
+
+  if (tokenInvited == null) {
+    error.push("Pas de token invité")
   }
 
   // register
@@ -210,6 +215,7 @@ router.post("/sign-in", async function (req, res, next) {
   let result = false;
   let user = null;
   let token = null;
+  let tokenInvited = req.body.token;
 
   let idCleanwalk = req.body.cleanwalkIdFromFront;
   let newParticipant = null;
@@ -237,6 +243,10 @@ router.post("/sign-in", async function (req, res, next) {
     }
 
     res.json({ error, result, user, token });
+  }
+
+  if (tokenInvited == null) {
+    error.push("Pas de token invité")
   }
 
   // sign-in & participate
@@ -271,7 +281,7 @@ router.post("/sign-in", async function (req, res, next) {
 });
 
 
-// PUT update password
+//    PUT update password   //
 router.put("/update-password", async function (req, res, next) {
   let result = false;
   let newPassword = null;
