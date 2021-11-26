@@ -1,8 +1,5 @@
+require('dotenv').config()
 var mongoose = require('mongoose');
-
-const user = 'Me';
-const mdp = 'codecode';
-const bddName = 'klean';
 
 const options = {
   connectTimeoutMS: 5000,
@@ -10,9 +7,7 @@ const options = {
   useUnifiedTopology : true
 }
 
-const connectionString = `mongodb+srv://${user}:${mdp}@mymovizapp.h9ifw.mongodb.net/${bddName}?retryWrites=true&w=majority`
-
-// `mongodb+srv://${user}:${mdp}@cluster0.wyxtx.mongodb.net/${bddName}?retryWrites=true&w=majority`;
+const connectionString = process.env.DB_CONNECTION
 
 
 mongoose.connect(
@@ -20,7 +15,7 @@ mongoose.connect(
     options,        
     function(err) {
       if (!err) {
-        console.log('Connection à la Base de données : ' + bddName + ' est OK');
+        console.log('Connection à la Base de données est OK');
       } else {
         console.log(err);
       }

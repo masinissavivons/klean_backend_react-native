@@ -1,3 +1,4 @@
+require('dotenv').config()
 var express = require("express");
 var router = express.Router();
 
@@ -9,9 +10,9 @@ const cityModel = require("../models/cities");
 
 var cloudinary = require("cloudinary").v2;
 cloudinary.config({
-  cloud_name: "dcjawpw4p",
-  api_key: "525136121674624",
-  api_secret: "5COH_MbcLYthbGTl4VxaH0xAUHo",
+  cloud_name: process.env.cloudinary_name,
+  api_key: process.env.cloudinary_api_key,
+  api_secret: process.env.cloudinary_api_secret,
 });
 
 function validateEmail(email) {
